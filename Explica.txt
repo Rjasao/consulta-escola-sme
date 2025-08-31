@@ -1,0 +1,129 @@
+inicio - GUIA_PASSO_A_PASSO.txt
+
+Guia passo a passo para iniciar a busca na API EscolaAberta
+
+1️⃣ Preparação do ambiente
+
+1. Instale o Python
+   - Certifique-se de ter Python 3.9 ou superior.
+   - No terminal, verifique com:
+     python --version -> 
+   - Se não tiver, baixe do site oficial: https://www.python.org/downloads/
+
+2. Crie uma pasta para o projeto
+   - Ex.: consulta-escolas-sp ->
+   - Dentro dela, teremos duas subpastas:
+     backend/ ->
+     frontend/ ->
+
+3. Copie todos os arquivos já fornecidos
+   - Backend: add.py, api_client.py, utils.py, config.py, .env.example ->
+   - Frontend: index.html, style.css, script.js ->
+   - Git: .gitignore ->
+   - Documentação: README.txt ->
+
+2️⃣ Configuração do backend
+
+1. Crie um ambiente virtual (opcional, mas recomendado)
+   - Windows CMD:
+     cd C:\Users\rjasa\Desktop\consulta-escolas-sp\backend ->
+     python -m venv venv ->
+     venv\Scripts\activate.bat ->
+   - Linux/Mac:
+     python -m venv venv ->
+     source venv/bin/activate ->
+
+2. Instale as dependências
+   pip install -r requirements.txt ->
+
+3. Configure o arquivo .env
+   - Baseie-se no .env.example ->
+   - Preencha com as chaves de teste fornecidas:
+     CONSUMER_KEY=1rQmU8QENUAmUHWxnvupVUeNwPwa ->
+     CONSUMER_SECRET=Zd9fp7G41pDE8Jn6A4FsfnbKmTEa ->
+     ACCESS_TOKEN_TESTE=64c494b2-fca5-3e27-b82e-7b6f88ed5855 ->
+   - Mantenha os valores de HOST, PORT, TOKEN_URL e URLs de produção/sandbox ->
+
+4. Verifique se .gitignore existe
+   - Ele deve ignorar arquivos sensíveis (.env) e temporários (__pycache__) ->
+
+3️⃣ Inicializando o backend
+
+1. Abra o terminal na pasta backend/ ->
+
+2. Execute o servidor Flask:
+  pip install flask-cors ->
+  pip install flask requests python-dotenv rapidfuzz ->
+  pip list ->
+  python add.py ->
+
+ deve retornar algo como:
+ * Serving Flask app 'add'
+ * Debug mode: on
+ * Running on http://127.0.0.1:5000
+
+
+3. Verifique se o servidor está rodando:
+   - Acesse: http://127.0.0.1:5000/health ->
+   - Deve retornar algo como:
+     
+   { pid: 1774
+     server: "flask"
+     status: "ok" }
+
+4️⃣ Configuração do frontend
+
+1. Abra a pasta frontend/ ->
+2. Abra o arquivo index.html no navegador (Chrome, Firefox, Edge) ->
+3. Você verá:
+   - Campos para consumer key, consumer secret, token de acesso, nome da escola ->
+   - Botões: Conectar, Servidor, Buscar, Apagar ->
+   - Área de resultados (boxes) ->
+
+5️⃣ Conectando à API
+
+1. Preencha os campos Chave do Consumidor e Segredo do Consumidor com os valores do .env ->
+2. Clique no botão Conectar (vermelho) ->
+   - Ao conectar corretamente:
+     - O botão muda para Conectado (azul) ->
+     - O token de acesso é preenchido automaticamente ->
+     - Um toast flutuante confirma o sucesso ->
+3. Se houver erro:
+   - Mensagem aparece em toast flutuante explicando o tipo de erro (conexão, chaves inválidas, etc.) ->
+
+6️⃣ Ligar/Desligar o servidor interno (opcional)
+
+- Botão Servidor ->
+  - OFF → ON: indica que o backend está ativo (confirme que add.py está rodando) ->
+  - ON → OFF: envia requisição para /api/server/shutdown e encerra o Flask (apenas dev) ->
+
+7️⃣ Realizando a busca
+
+1. Digite o nome da escola no campo correspondente ->
+   - Pode conter pequenos erros de digitação; o sistema utiliza fuzzy match ->
+2. Clique Buscar ->
+   - A busca é enviada para o backend, que se comunica com a API EscolaAberta ->
+   - Resultados aparecem em boxes separados:
+     - Nome ->
+     - Endereço ->
+     - Número ->
+     - DRE ->
+   - Cada box possui ícone 📋 para copiar os dados ->
+3. Se nenhum resultado for encontrado:
+   - Um toast flutuante avisará “Nenhuma correspondência encontrada” ->
+4. Se ocorrer erro de conexão ou API:
+   - Mensagem de erro aparece no toast, informando se foi busca ou outro tipo ->
+
+8️⃣ Limpeza de campos
+
+- Cada campo possui botão Apagar para limpar entradas individuais ->
+- Botão Apagar busca limpa o campo do nome da escola e resultados ->
+
+9️⃣ Dicas finais
+
+- Sempre iniciar o backend antes do frontend ->
+- Se o token expirar (3600s), clique novamente em Conectar ->
+- Sandbox e Produção podem ser alternados alterando base_url no frontend ou .env ->
+- Para mobile e tablets, o layout se adapta automaticamente (Bootstrap + CSS) ->
+
+final

@@ -1,0 +1,144 @@
+/* inicio */
+/* style.css - estilos para frontend EscolaAberta */
+
+/* Reset e ajustes gerais */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.container {
+    max-width: 960px;
+    margin: 20px auto;
+    padding: 15px;
+}
+
+/* Boxes de input e token */
+.input-box {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.input-box label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.input-box input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Botões principais */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+/* Botão conectar */
+#btn-connect {
+    background-color: #ff4d4f; /* vermelho */
+    color: #fff;
+}
+#btn-connect.connected {
+    background-color: #5dade2; /* azul claro */
+}
+
+/* Botão busca e apagar */
+button.search-btn {
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+button.clear-btn {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+button.copy-btn {
+    background-color: #3498db;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+/* Resultados da busca */
+.result-box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+
+.result-box .field {
+    margin-bottom: 8px;
+}
+
+.result-box .field span.label {
+    font-weight: bold;
+}
+
+.result-box .copy-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #3498db;
+}
+
+/* Box de mensagens flutuantes */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #ff4d4f;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 6px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+    display: none; /* por padrão escondido */
+    z-index: 9999;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        margin: 10px;
+    }
+
+    button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .input-box input {
+        font-size: 13px;
+    }
+
+    .result-box {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .copy-icon {
+        font-size: 14px;
+    }
+}
+# final

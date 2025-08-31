@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.env.*
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs e temporários
+*.log
+*.tmp
+*.swp
+*.DS_Store
+
+# Virtualenv
+venv/
+ENV/
+env/
+
+# Arquivos de compilação
+*.egg-info/
+dist/
+build/
+
+# Node/npm (caso use pacotes frontend)
+node_modules/
+npm-debug.log
+
+# Arquivos de backup
+*.bak
+*.old
+
+# Configuração local
+config.py
+.env

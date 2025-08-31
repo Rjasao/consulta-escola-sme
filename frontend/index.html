@@ -1,0 +1,53 @@
+<!-- inicio - index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta EscolaAberta SP</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h2 class="mb-4">Consulta EscolaAberta - SP</h2>
+
+    <div class="mb-3 d-flex flex-wrap">
+        <button id="btn-connect">Conectar</button>
+        <button id="btn-server">Servidor: OFF</button>
+    </div>
+
+    <div class="input-box">
+        <label for="consumer_key">Chave do Consumidor</label>
+        <input type="text" id="consumer_key">
+        <button class="clear-btn" data-target="consumer_key">Apagar</button>
+    </div>
+
+    <div class="input-box">
+        <label for="consumer_secret">Segredo do Consumidor</label>
+        <input type="text" id="consumer_secret">
+        <button class="clear-btn" data-target="consumer_secret">Apagar</button>
+    </div>
+
+    <div class="input-box">
+        <label for="access_token">Token de Acesso</label>
+        <input type="text" id="access_token">
+        <button class="clear-btn" data-target="access_token">Apagar</button>
+    </div>
+
+    <div class="input-box">
+        <label for="school_name">Nome da Escola</label>
+        <input type="text" id="school_name">
+        <div class="mt-2">
+            <button class="search-btn" id="btn-search">Buscar</button>
+            <button class="clear-btn" id="btn-clear-search">Apagar busca</button>
+        </div>
+    </div>
+
+    <div id="results"></div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
+<!-- final -->
