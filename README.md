@@ -7,13 +7,14 @@ Permite buscar escolas pelo nome (com erros de digitação) e exibir informaçõ
 
 1. Estrutura de Pastas
 
-project-root/
+consulta-escola-sme/
 │
 ├── backend/
 │   ├── add.py            # Servidor Flask principal
 │   ├── api_client.py     # Cliente para API EscolaAberta
 │   ├── utils.py          # Funções de normalização e fuzzy match
 │   ├── config.py         # Configurações e variáveis de ambiente
+│   ├── server_control.py     # NOVO: controla start/stop do add.py e verifica Plesk
 │   └── .env.example      # Exemplo de variáveis de ambiente
 │   └── .env              # arquivo real usado pelo backend (não subir para Git)
 │   ├── README_BACKEND.md       ← documentação específica do backend (opcional)

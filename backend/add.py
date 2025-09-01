@@ -1,3 +1,5 @@
+# inicio - add.py
+# add.py
 # -*- coding: utf-8 -*-
 """
 Servidor Flask que expõe endpoints internos para o frontend
@@ -12,7 +14,7 @@ import config
 import api_client
 
 # Cria app Flask
-app = Flask(__name__, static_folder='../frontend')  # Ajuste se necessário
+app = Flask(__name__, static_folder='../frontend', static_url_path='')  # Servir CSS/JS corretamente
 CORS(app)  # Permite chamadas do frontend local
 
 # -------------------------
@@ -25,8 +27,9 @@ def serve_frontend():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    """Serve outros arquivos estáticos do frontend (CSS, JS)"""
+    """Serve CSS, JS e outros arquivos estáticos do frontend"""
     return send_from_directory(app.static_folder, path)
+
 
 # -------------------------
 # Endpoints da API
@@ -44,14 +47,17 @@ def api_connect():
     base_url = data.get("base_url", config.APILIB_BASE_SANDBOX)
     grant_type = data.get("grant_type", "client_credentials")
     
+    if not consumer_key or not consumer_secret:
+        return jsonify({"error": "consumer_key e consumer_secret são obrigatórios"}), 400
+
     try:
-        token_payload = api_client.fetch_access_token(
+        access_token = api_client.get_access_token(
             consumer_key=consumer_key,
             consumer_secret=consumer_secret,
             base_url=base_url,
             grant_type=grant_type
         )
-        return jsonify(token_payload)
+        return jsonify({"access_token": access_token})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -65,8 +71,11 @@ def api_search():
     
     if not name:
         return jsonify({"error": "O campo 'name' é obrigatório"}), 400
+    if not token:
+        return jsonify({"error": "O campo 'token' é obrigatório"}), 400
+
     try:
-        result = api_client.search_by_name(name, token=token, base_url=base_url)
+        result = api_client.search_school(name, token=token, base_url=base_url)
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -80,6 +89,12 @@ def shutdown_server():
     func()
     return jsonify({"status": "server shutting down"})
 
+@app.post("/api/server/start")
+def start_server():
+    if is_plesk_running():  # você pode implementar essa função
+        return jsonify({"status": "running", "message": "Plesk já está ativo"}), 200
+    return jsonify({"status": "running", "message": "Servidor Flask já ativo"}), 200
+
 # -------------------------
 # Executa o servidor
 # -------------------------
@@ -88,3 +103,5 @@ if __name__ == "__main__":
     port = config.PORT
     print(f"Starting Flask server on http://{host}:{port}")
     app.run(host=host, port=port, debug=True)
+
+# final

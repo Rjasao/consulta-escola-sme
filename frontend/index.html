@@ -1,4 +1,5 @@
 <!-- inicio - index.html -->
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,44 +10,53 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
+    
+<div class="container my-4">
     <h2 class="mb-4">Consulta EscolaAberta - SP</h2>
 
-    <div class="mb-3 d-flex flex-wrap">
-        <button id="btn-connect">Conectar</button>
-        <button id="btn-server">Servidor: OFF</button>
+    <!-- Botões Conectar e Servidor -->
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <button id="btn-connect" class="btn btn-primary">Conectar</button>
+        <button id="btn-server" class="btn btn-secondary">Servidor: OFF</button>
     </div>
 
-    <div class="input-box">
-        <label for="consumer_key">Chave do Consumidor</label>
-        <input type="text" id="consumer_key">
-        <button class="clear-btn" data-target="consumer_key">Apagar</button>
+    <!-- Inputs das chaves e token -->
+    <div class="input-box mb-2">
+        <label for="consumer_key" class="form-label">Chave do Consumidor</label>
+        <input type="text" id="consumer_key" class="form-control">
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_key">Apagar</button>
     </div>
 
-    <div class="input-box">
-        <label for="consumer_secret">Segredo do Consumidor</label>
-        <input type="text" id="consumer_secret">
-        <button class="clear-btn" data-target="consumer_secret">Apagar</button>
+    <div class="input-box mb-2">
+        <label for="consumer_secret" class="form-label">Segredo do Consumidor</label>
+        <input type="text" id="consumer_secret" class="form-control">
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_secret">Apagar</button>
     </div>
 
-    <div class="input-box">
-        <label for="access_token">Token de Acesso</label>
-        <input type="text" id="access_token">
-        <button class="clear-btn" data-target="access_token">Apagar</button>
+    <div class="input-box mb-2">
+        <label for="access_token" class="form-label">Token de Acesso</label>
+        <input type="text" id="access_token" class="form-control" readonly>
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="access_token">Apagar</button>
     </div>
 
-    <div class="input-box">
-        <label for="school_name">Nome da Escola</label>
-        <input type="text" id="school_name">
-        <div class="mt-2">
-            <button class="search-btn" id="btn-search">Buscar</button>
-            <button class="clear-btn" id="btn-clear-search">Apagar busca</button>
+    <!-- Busca de escolas -->
+    <div class="input-box mb-3">
+        <label for="school_name" class="form-label">Nome da Escola</label>
+        <input type="text" id="school_name" class="form-control">
+        <div class="mt-2 d-flex gap-2">
+            <button class="search-btn btn btn-success" id="btn-search">Buscar</button>
+            <button class="clear-btn btn btn-outline-secondary" id="btn-clear-search">Apagar busca</button>
         </div>
     </div>
 
-    <div id="results"></div>
+    <!-- Resultados -->
+    <div id="results" class="mt-3"></div>
 </div>
-<div id="toast" class="toast"></div>
+
+<!-- Toast de feedback -->
+<div id="toast" class="toast position-fixed bottom-0 end-0 m-3 p-2 rounded" style="display:none; color:white;"></div>
+
+<!-- Scripts -->
 <script src="script.js"></script>
 </body>
 </html>
