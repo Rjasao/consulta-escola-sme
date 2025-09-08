@@ -1,4 +1,4 @@
-cd backend
+cd backend criar arquivos "__pycache__" e "venv"
 
 python -m venv venv             		 	# cria um novo ambiente virtual chamado venv
 
