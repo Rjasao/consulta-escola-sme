@@ -10,24 +10,26 @@ Permite buscar escolas pelo nome (com erros de digitação) e exibir informaçõ
 consulta-escola-sme/
 │
 ├── backend/
+│       └──__pycache__/
+│       └── venv/         ← ambiente virtual (não versionar no Git)
+│   ├── .env              # arquivo real usado pelo backend (não subir para Git)
+│   ├── .env.example      # Exemplo de variáveis de ambiente
 │   ├── add.py            # Servidor Flask principal
 │   ├── api_client.py     # Cliente para API EscolaAberta
-│   ├── utils.py          # Funções de normalização e fuzzy match
 │   ├── config.py         # Configurações e variáveis de ambiente
-│   ├── server_control.py     # NOVO: controla start/stop do add.py e verifica Plesk
-│   └── .env.example      # Exemplo de variáveis de ambiente
-│   └── .env              # arquivo real usado pelo backend (não subir para Git)
 │   ├── README_BACKEND.md       ← documentação específica do backend (opcional)
-│   └── requirements.txt       ← lista de dependências Python (opcional, mas recomendada)
+│   ├── requirements.txt       ← lista de dependências Python (opcional, mas recomendada)
+│   ├── server_control.py     # NOVO: controla start/stop do add.py e verifica Plesk
+│   └── utils.py          # Funções de normalização e fuzzy match
 │   
 ├── frontend/
 │   ├── index.html        # Interface do usuário
-│   ├── style.css         # Estilos e responsividade
-│   └── script.js         # Lógica de frontend: conexão, busca, resultados
+│   ├── script.js         # Lógica de frontend: conexão, busca, resultados
+│   └── style.css         # Estilos e responsividade
 │
 ├── .gitignore
-└── README.txt            # Este arquivo
-└── venv/           ← ambiente virtual (não versionar no Git)
+├── git
+└── README.md            # Este arquivo           
 
 2. Configuração
 
@@ -125,5 +127,10 @@ python add.py
 7. Licença
 
 Este projeto é demo/teste para integração com API EscolaAberta SP.
+
+
+
+
+
 
 final

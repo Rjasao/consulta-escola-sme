@@ -7,3 +7,4 @@ Ele gerencia tokens de acesso, busca escolas por nome (com tratamento de erros e
 
 ## 📁 Estrutura de arquivos
 
+/final/

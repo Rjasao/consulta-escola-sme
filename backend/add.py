@@ -80,6 +80,49 @@ def api_search():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# ---------------------------------------------------------------------------
+# Endpoint: /api/schools
+#
+# Permite consultar a lista de escolas utilizando múltiplos filtros de
+# pesquisa. Recebe um corpo JSON contendo:
+#   - token: (obrigatório) o token Bearer para autenticação.
+#   - base_url: (opcional) base da API. Se omitido, utiliza config.APILIB_BASE_SANDBOX.
+#   - page, search, dre, tipoesc, distrito, bairro, subpref: filtros opcionais.
+#
+# Este endpoint delega a chamada à função `search_schools` do módulo
+# api_client e retorna o JSON diretamente ao frontend.
+@app.post("/api/schools")
+def api_schools():
+    data = request.get_json(force=True, silent=True) or {}
+    token = data.get("token")
+    base_url = data.get("base_url", config.APILIB_BASE_SANDBOX)
+    page = data.get("page")
+    search = data.get("search")
+    dre = data.get("dre")
+    tipoesc = data.get("tipoesc")
+    distrito = data.get("distrito")
+    bairro = data.get("bairro")
+    subpref = data.get("subpref")
+
+    if not token:
+        return jsonify({"error": "O campo 'token' é obrigatório"}), 400
+    try:
+        result = api_client.search_schools(
+            token=token,
+            base_url=base_url,
+            page=page,
+            search=search,
+            dre=dre,
+            tipoesc=tipoesc,
+            distrito=distrito,
+            bairro=bairro,
+            subpref=subpref,
+        )
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.post("/api/server/shutdown")
 def shutdown_server():
     """Encerra o servidor Flask (apenas dev)"""
@@ -103,5 +146,6 @@ if __name__ == "__main__":
     port = config.PORT
     print(f"Starting Flask server on http://{host}:{port}")
     app.run(host=host, port=port, debug=True)
+
 
 # final

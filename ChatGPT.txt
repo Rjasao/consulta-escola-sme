@@ -1,0 +1,873 @@
+1. Estrutura de Pastas
+
+consulta-escola-sme/
+│
+├── backend/
+│       └──__pycache__/
+│       └── venv/         ← ambiente virtual (não versionar no Git)
+│   ├── .env              # arquivo real usado pelo backend (não subir para Git)
+│   ├── .env.example      # Exemplo de variáveis de ambiente
+│   ├── add.py            # Servidor Flask principal
+│   ├── api_client.py     # Cliente para API EscolaAberta
+│   ├── config.py         # Configurações e variáveis de ambiente
+│   ├── README_BACKEND.md       ← documentação específica do backend (opcional)
+│   ├── requirements.txt       ← lista de dependências Python (opcional, mas recomendada)
+│   ├── server_control.py     # NOVO: controla start/stop do add.py e verifica Plesk
+│   └── utils.py          # Funções de normalização e fuzzy match
+│   
+├── frontend/
+│   ├── index.html        # Interface do usuário
+│   ├── script.js         # Lógica de frontend: conexão, busca, resultados
+│   └── style.css         # Estilos e responsividade
+│
+├── .gitignore
+├── git
+└── README.md            # Este arquivo 
+
+
+
+@@@"consulta-escola-sme/.gitignore"
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.env.*
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs e temporários
+*.log
+*.tmp
+*.swp
+*.DS_Store
+
+# Virtualenv
+venv/
+ENV/
+env/
+
+# Arquivos de compilação
+*.egg-info/
+dist/
+build/
+
+# Node/npm (caso use pacotes frontend)
+node_modules/
+npm-debug.log
+
+# Arquivos de backup
+*.bak
+*.old
+
+# Configuração local
+config.py
+.env
+@@@@
+
+
+@@@ "consulta-escola-sme\frontend\index.html"
+
+<!-- inicio - index.html -->
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta EscolaAberta SP</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+<div class="container my-4">
+    <h2 class="mb-4">Consulta EscolaAberta - SP</h2>
+
+    <!-- Botões Conectar e Servidor -->
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <button id="btn-connect" class="btn btn-primary">Conectar</button>
+        <button id="btn-server" class="btn btn-secondary">Servidor: OFF</button>
+    </div>
+
+    <!-- Inputs das chaves e token -->
+    <div class="input-box mb-2">
+        <label for="consumer_key" class="form-label">Chave do Consumidor</label>
+        <input type="text" id="consumer_key" class="form-control">
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_key">Apagar</button>
+    </div>
+
+    <div class="input-box mb-2">
+        <label for="consumer_secret" class="form-label">Segredo do Consumidor</label>
+        <input type="text" id="consumer_secret" class="form-control">
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_secret">Apagar</button>
+    </div>
+
+    <div class="input-box mb-2">
+        <label for="access_token" class="form-label">Token de Acesso</label>
+        <input type="text" id="access_token" class="form-control" readonly>
+        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="access_token">Apagar</button>
+    </div>
+
+    <!-- Busca de escolas -->
+    <div class="input-box mb-3">
+        <label for="school_name" class="form-label">Nome da Escola</label>
+        <input type="text" id="school_name" class="form-control">
+        <div class="mt-2 d-flex gap-2">
+            <button class="search-btn btn btn-success" id="btn-search">Buscar</button>
+            <button class="clear-btn btn btn-outline-secondary" id="btn-clear-search">Apagar busca</button>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="results" class="mt-3"></div>
+</div>
+
+<!-- Toast de feedback -->
+<div id="toast" class="toast position-fixed bottom-0 end-0 m-3 p-2 rounded" style="display:none; color:white;"></div>
+
+<!-- Scripts -->
+<script src="script.js"></script>
+</body>
+</html>
+<!-- final -->
+@@@@
+
+
+@@@"consulta-escola-sme\frontend\script.js"
+
+// inicio - script.js
+// script.js
+
+document.addEventListener("DOMContentLoaded", () => {
+    const btnConnect = document.getElementById("btn-connect");
+    const btnServer = document.getElementById("btn-server");
+    const btnSearch = document.getElementById("btn-search");
+    const btnClearSearch = document.getElementById("btn-clear-search");
+    const toast = document.getElementById("toast");
+    const resultsDiv = document.getElementById("results");
+    const accessTokenInput = document.getElementById("access_token");
+
+    // -------------------------
+    // Funções auxiliares
+    // -------------------------
+    function showToast(message, success = false) {
+        toast.textContent = message;
+        toast.style.backgroundColor = success ? "#4CAF50" : "#ff4d4f";
+        toast.style.display = "block";
+        setTimeout(() => { toast.style.display = "none"; }, 4000);
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text)
+            .then(() => showToast("Copiado para a área de transferência", true))
+            .catch(() => showToast("Erro ao copiar", false));
+    }
+
+    // -------------------------
+    // Conectar e gerar token
+    // -------------------------
+    btnConnect.addEventListener("click", async () => {
+        const consumerKey = document.getElementById("consumer_key").value.trim();
+        const consumerSecret = document.getElementById("consumer_secret").value.trim();
+
+        if (!consumerKey || !consumerSecret) {
+            showToast("Preencha consumer key e segredo", false);
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/connect", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    consumer_key: consumerKey,
+                    consumer_secret: consumerSecret,
+                    base_url: "https://gateway.apilib.prefeitura.sp.gov.br/token"
+                })
+            });
+
+            const data = await res.json();
+            if (data.access_token) {
+                accessTokenInput.value = data.access_token;
+                accessTokenInput.setAttribute("readonly", true);
+                btnConnect.textContent = "Conectado";
+                btnConnect.classList.add("connected");
+                showToast("Conexão bem-sucedida", true);
+            } else {
+                showToast("Erro: " + (data.error || "Token não retornado"), false);
+            }
+        } catch (err) {
+            showToast("Erro de conexão: " + err.message, false);
+        }
+    });
+
+    // -------------------------
+    // Servidor ON/OFF atualizado
+    // -------------------------
+    btnServer.addEventListener("click", async () => {
+    if (btnServer.textContent.includes("OFF")) {
+        try {
+            const res = await fetch("http://localhost:5050/api/server/start", { method: "POST" });
+            const data = await res.json();
+            btnServer.textContent = "Servidor: ON";
+            showToast(data.message, data.status !== "error");
+        } catch (err) {
+            showToast("Erro ao iniciar servidor: " + err.message, false);
+        }
+    } else {
+        try {
+            const res = await fetch("http://localhost:5050/api/server/shutdown", { method: "POST" });
+            const data = await res.json();
+            btnServer.textContent = "Servidor: OFF";
+            showToast(data.message, true);
+        } catch (err) {
+            showToast("Erro ao desligar servidor: " + err.message, false);
+        }
+    }
+});
+
+    // -------------------------
+    // Buscar escolas
+    // -------------------------
+    btnSearch.addEventListener("click", async () => {
+        const token = accessTokenInput.value.trim();
+        const name = document.getElementById("school_name").value.trim();
+
+        if (!token || !name) {
+            showToast("Preencha token e nome da escola", false);
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/search", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token, base_url: "http://localhost:5000", name })
+            });
+
+            const data = await res.json();
+            resultsDiv.innerHTML = "";
+
+            if (data.match || (data.matches && data.matches.length > 0)) {
+                const matches = data.matches || [data.match];
+
+                matches.forEach(match => {
+                    const box = document.createElement("div");
+                    box.className = "result-box";
+
+                    ["nome", "endereco", "numero", "dre"].forEach(f => {
+                        const div = document.createElement("div");
+                        div.className = "field";
+                        div.innerHTML = `<span class="label">${f.toUpperCase()}:</span> ${match[f] || "-"}`;
+                        box.appendChild(div);
+                    });
+
+                    const copyIcon = document.createElement("span");
+                    copyIcon.className = "copy-icon";
+                    copyIcon.innerHTML = "📋";
+                    copyIcon.addEventListener("click", () => copyToClipboard(JSON.stringify(match)));
+                    box.appendChild(copyIcon);
+
+                    resultsDiv.appendChild(box);
+                });
+            } else {
+                showToast("Nenhuma correspondência encontrada", false);
+            }
+        } catch (err) {
+            showToast("Erro na busca: " + err.message, false);
+        }
+    });
+
+    // -------------------------
+    // Limpar busca
+    // -------------------------
+    btnClearSearch.addEventListener("click", () => {
+        document.getElementById("school_name").value = "";
+        resultsDiv.innerHTML = "";
+    });
+
+    // -------------------------
+    // Botões de apagar campos
+    // -------------------------
+    document.querySelectorAll(".clear-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.getAttribute("data-target");
+            if (targetId) document.getElementById(targetId).value = "";
+        });
+    });
+
+});
+// final
+@@@@
+
+
+@@@"consulta-escola-sme\frontend\styles.css"
+
+/* inicio */
+/* style.css - estilos para frontend EscolaAberta */
+
+/* Reset e ajustes gerais */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.container {
+    max-width: 960px;
+    margin: 20px auto;
+    padding: 15px;
+}
+
+/* Boxes de input e token */
+.input-box {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.input-box label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.input-box input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Botões principais */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+/* Botão conectar */
+#btn-connect {
+    background-color: #ff4d4f; /* vermelho */
+    color: #fff;
+}
+#btn-connect.connected {
+    background-color: #5dade2; /* azul claro */
+}
+
+/* Botão busca e apagar */
+button.search-btn {
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+button.clear-btn {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+button.copy-btn {
+    background-color: #3498db;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+/* Resultados da busca */
+.result-box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.05);
+}
+
+.result-box .field {
+    margin-bottom: 8px;
+}
+
+.result-box .field span.label {
+    font-weight: bold;
+}
+
+.result-box .copy-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #3498db;
+}
+
+/* Box de mensagens flutuantes */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #ff4d4f;
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 6px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+    display: none; /* por padrão escondido */
+    z-index: 9999;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        margin: 10px;
+    }
+
+    button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .input-box input {
+        font-size: 13px;
+    }
+
+    .result-box {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .copy-icon {
+        font-size: 14px;
+    }
+}
+# final
+
+
+
+@@@"consulta-escola-sme\backend\.env"
+
+HOST=127.0.0.1
+PORT=5000
+CONSUMER_KEY=1rQmU8QENUAmUHWxnvupVUeNwPwa
+CONSUMER_SECRET=Zd9fp7G41pDE8Jn6A4FsfnbKmTEa
+ACCESS_TOKEN_TESTE=64c494b2-fca5-3e27-b82e-7b6f88ed5855
+APILIB_BASE_PROD=http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+APILIB_BASE_SANDBOX=https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+TOKEN_URL=https://gateway.apilib.prefeitura.sp.gov.br/token
+@@@@
+
+
+@@@"consulta-escola-sme\backend\.env.example"
+
+# inicio
+# .env.example - modelo de variáveis de ambiente para o backend
+
+# HOST e PORT do Flask
+HOST=127.0.0.1
+PORT=5000
+
+# Timeout padrão para requests externos (segundos)
+HTTP_TIMEOUT=20
+
+# URLs da API EscolaAberta
+APILIB_BASE_PROD=http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+APILIB_BASE_SANDBOX=https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+
+# Endpoint para solicitar token
+TOKEN_URL=https://gateway.apilib.prefeitura.sp.gov.br/token
+
+# Chaves de acesso (exemplo de teste - nunca deixar chaves de produção aqui!)
+CONSUMER_KEY=1rQmU8QENUAmUHWxnvupVUeNwPwa
+CONSUMER_SECRET=Zd9fp7G41pDE8Jn6A4FsfnbKmTEa
+ACCESS_TOKEN=64c494b2-fca5-3e27-b82e-7b6f88ed5855
+# final
+@@@@
+
+
+@@@"consulta-escola-sme\backend\add.py"
+
+# inicio - add.py
+# add.py
+# -*- coding: utf-8 -*-
+"""
+Servidor Flask que expõe endpoints internos para o frontend
+e serve os arquivos estáticos do frontend.
+"""
+from __future__ import annotations
+import os
+from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
+
+import config
+import api_client
+
+# Cria app Flask
+app = Flask(__name__, static_folder='../frontend', static_url_path='')  # Servir CSS/JS corretamente
+CORS(app)  # Permite chamadas do frontend local
+
+# -------------------------
+# Rotas do Frontend
+# -------------------------
+@app.route('/')
+def serve_frontend():
+    """Serve o index.html do frontend"""
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve CSS, JS e outros arquivos estáticos do frontend"""
+    return send_from_directory(app.static_folder, path)
+
+# -------------------------
+# Endpoints da API
+# -------------------------
+@app.get("/health")
+def health():
+    return jsonify({"status": "ok", "server": "flask", "pid": os.getpid()})
+
+@app.post("/api/connect")
+def api_connect():
+    """Gera token de acesso usando consumer_key e consumer_secret"""
+    data = request.get_json(force=True, silent=True) or {}
+    consumer_key = data.get("consumer_key")
+    consumer_secret = data.get("consumer_secret")
+    base_url = data.get("base_url", config.APILIB_BASE_SANDBOX)
+    grant_type = data.get("grant_type", "client_credentials")
+    
+    if not consumer_key or not consumer_secret:
+        return jsonify({"error": "consumer_key e consumer_secret são obrigatórios"}), 400
+
+    try:
+        access_token = api_client.get_access_token(
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
+            base_url=base_url,
+            grant_type=grant_type
+        )
+        return jsonify({"access_token": access_token})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.post("/api/search")
+def api_search():
+    """Busca escolas pelo nome"""
+    data = request.get_json(force=True, silent=True) or {}
+    name = data.get("name")
+    token = data.get("token")
+    base_url = data.get("base_url", config.APILIB_BASE_SANDBOX)
+    
+    if not name:
+        return jsonify({"error": "O campo 'name' é obrigatório"}), 400
+    if not token:
+        return jsonify({"error": "O campo 'token' é obrigatório"}), 400
+
+    try:
+        result = api_client.search_school(name, token=token, base_url=base_url)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.post("/api/server/shutdown")
+def shutdown_server():
+    """Encerra o servidor Flask (apenas dev)"""
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        return jsonify({"error": "Not running with the Werkzeug Server"}), 500
+    func()
+    return jsonify({"status": "server shutting down"})
+
+@app.post("/api/server/start")
+def start_server():
+    if is_plesk_running():  # você pode implementar essa função
+        return jsonify({"status": "running", "message": "Plesk já está ativo"}), 200
+    return jsonify({"status": "running", "message": "Servidor Flask já ativo"}), 200
+
+# -------------------------
+# Executa o servidor
+# -------------------------
+if __name__ == "__main__":
+    host = config.HOST
+    port = config.PORT
+    print(f"Starting Flask server on http://{host}:{port}")
+    app.run(host=host, port=port, debug=True)
+
+# final
+@@@@
+
+
+@@@"consulta-escola-sme\backend\api_client.py"
+
+# inicio - api_client.py
+# -*- coding: utf-8 -*-
+"""
+Arquivo: api_client.py
+Função: Cliente para comunicação com API EscolaAberta.
+Gerencia tokens, busca escolas e normaliza respostas.
+"""
+import requests
+from typing import Any, Dict, List, Optional
+import config
+import utils
+
+_state: Dict[str, Any] = {}
+
+def set_base_url(url: str):
+    """Configura a URL base da API."""
+    _state["base_url"] = url.rstrip("/")
+
+def get_access_token(
+    consumer_key: str,
+    consumer_secret: str,
+    base_url: Optional[str] = None,
+    grant_type: str = "client_credentials",
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+) -> str:
+    """Obtém token de acesso."""
+    base = (base_url or _state.get("base_url") or "").rstrip("/")
+    if not base:
+        raise RuntimeError("Base URL not configured.")
+    token_url = f"{base}/token" if not base.endswith("/token") else base
+    auth = (consumer_key, consumer_secret)
+    data = {"grant_type": grant_type}
+    if grant_type == "password":
+        if not (username and password):
+            raise RuntimeError("username/password required for password grant_type")
+        data["username"] = username
+        data["password"] = password
+    resp = requests.post(token_url, auth=auth, data=data, timeout=config.HTTP_TIMEOUT)
+    resp.raise_for_status()
+    payload = resp.json()
+    _state.update({
+        "access_token": payload.get("access_token"),
+        "token_type": payload.get("token_type", "Bearer"),
+        "expires_in": payload.get("expires_in"),
+        "scope": payload.get("scope"),
+    })
+    return payload.get("access_token")
+
+CANDIDATE_PATHS = ["/escolas", "/Escolas", "/consulta", "/buscar", "/escola"]
+
+def _extract_items_from_response(data: Any) -> List[Dict[str, Any]]:
+    """Normaliza resposta da API."""
+    if isinstance(data, list):
+        return [x for x in data if isinstance(x, dict)]
+    if isinstance(data, dict):
+        for k in ("items", "itens", "lista", "data", "result"):
+            v = data.get(k)
+            if isinstance(v, list):
+                return [x for x in v if isinstance(x, dict)]
+        for v in data.values():
+            if isinstance(v, list):
+                return [x for x in v if isinstance(x, dict)]
+    return []
+
+def search_school(name: str, token: Optional[str] = None, base_url: Optional[str] = None) -> Dict[str, Any]:
+    """Busca escola pelo nome."""
+    base = (base_url or _state.get("base_url") or "").rstrip("/")
+    if not base:
+        raise RuntimeError("Base URL not configured.")
+    access_token = token or _state.get("access_token")
+    if not access_token:
+        raise RuntimeError("Access token missing.")
+    headers = {"Authorization": f"Bearer {access_token}"}
+    last_error: Optional[str] = None
+    for path in CANDIDATE_PATHS:
+        url = f"{base}{path}"
+        try:
+            resp = requests.get(url, headers=headers, params={"nome": name}, timeout=config.HTTP_TIMEOUT)
+            if resp.status_code == 404:
+                last_error = f"Endpoint {path} returned 404"
+                continue
+            resp.raise_for_status()
+            data = resp.json()
+            items = _extract_items_from_response(data)
+            normalized = [utils.normalize_school_item(x) for x in items]
+            chosen_raw = utils.best_match(name, items)
+            chosen_norm = utils.normalize_school_item(chosen_raw) if chosen_raw else None
+            return {"endpoint": url, "items": normalized, "match": chosen_norm, "raw": data}
+        except requests.RequestException as ex:
+            last_error = str(ex)
+            continue
+    raise RuntimeError(last_error or "No endpoint succeeded.")
+# final
+@@@@
+
+
+@@@"consulta-escola-sme\backend\config.py"
+
+# inicio - config.py
+# -*- coding: utf-8 -*-
+"""
+Arquivo: config.py
+Função: Carrega variáveis de ambiente para o backend.
+Configura host, porta, timeout e URLs da API.
+"""
+import os
+from dotenv import load_dotenv
+
+# Carrega .env
+load_dotenv()
+
+# Porta do Flask
+PORT = int(os.getenv("PORT", "5000"))
+# Host de bind (localhost por padrão)
+HOST = os.getenv("HOST", "127.0.0.1")
+
+# Timeout padrão para requests externos (segundos)
+HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "20"))
+
+# Base URLs (Produção/Sandbox)
+APILIB_BASE_PROD = os.getenv(
+    "APILIB_BASE_PROD",
+    "http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1"
+)
+APILIB_BASE_SANDBOX = os.getenv(
+    "APILIB_BASE_SANDBOX",
+    "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1"
+)
+
+# Token endpoint (usado para solicitar tokens)
+TOKEN_URL = os.getenv(
+    "TOKEN_URL",
+    "https://gateway.apilib.prefeitura.sp.gov.br/token"
+)
+# final
+@@@@
+
+
+
+@@@"\consulta-escola-sme\backend\README_BACKEND.md"
+
+# Backend - API EscolaAberta (Prefeitura SP)
+
+Este backend em **Python + Flask** atua como intermediário entre o frontend e a API EscolaAberta da Prefeitura de São Paulo.  
+Ele gerencia tokens de acesso, busca escolas por nome (com tratamento de erros e *fuzzy match*), e expõe endpoints internos para o frontend.
+
+---
+
+## 📁 Estrutura de arquivos
+@@@@
+
+
+@@@"\consulta-escola-sme\backend\requirements.txt"
+
+Flask==3.0.3
+python-dotenv==1.0.1
+requests==2.32.3
+rapidfuzz==3.9.7
+@@@@
+
+
+@@@"\consulta-escola-sme\backend\server_control.py"
+
+# inicio - server_control.py
+import subprocess
+import sys
+import os
+from flask import Flask, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+ADD_PY_PATH = os.path.join(os.path.dirname(__file__), "add.py")
+flask_process = None
+
+@app.post("/api/server/start")
+def start_server():
+    global flask_process
+    if flask_process and flask_process.poll() is None:
+        return jsonify({"status": "running", "message": "Servidor já ativo"}), 200
+    try:
+        # Executa PowerShell para abrir add.py
+        flask_process = subprocess.Popen(
+            ["powershell.exe", "-NoExit", "-Command", f"python \"{ADD_PY_PATH}\""]
+        )
+        return jsonify({"status": "started", "message": "Servidor iniciado via PowerShell"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.post("/api/server/shutdown")
+def shutdown_server():
+    global flask_process
+    if flask_process and flask_process.poll() is None:
+        flask_process.terminate()
+        return jsonify({"status": "stopped", "message": "Servidor encerrado"}), 200
+    return jsonify({"status": "stopped", "message": "Servidor já parado"}), 200
+
+if __name__ == "__main__":
+    app.run(port=5050, debug=True)
+# final
+@@@@
+
+
+@@@"\consulta-escola-sme\backend\utils.py"
+
+# inicio - utils.py
+# -*- coding: utf-8 -*-
+"""
+Arquivo: utils.py
+Função: Normalização de respostas da API e fuzzy match para nome da escola.
+"""
+from rapidfuzz import fuzz
+
+CAND_KEYS = {
+    "endereco": ["endereco", "Endereco", "logradouro", "Logradouro", "address"],
+    "numero": ["numero", "Numero", "número", "num", "Number"],
+    "dre": [
+        "dre", "DRE", "diretoriaRegional", "DiretoriaRegional",
+        "diretoria_regional", "regional", "Diretoria",
+        "diretoria", "diretoriaRegionalDeEducacao"
+    ],
+    "nome": ["nome", "Nome", "escola", "Unidade", "denominacao", "school_name"]
+}
+
+def pick_first(d: dict, keys: list):
+    for k in keys:
+        if k in d and d[k] not in (None, ""):
+            return d[k]
+    return None
+
+def normalize_school_item(item: dict) -> dict:
+    """Extrai nome, endereço, número e DRE, quando possível."""
+    if not isinstance(item, dict):
+        return {"nome": None, "endereco": None, "numero": None, "dre": None, "raw": item}
+    return {
+        "nome": pick_first(item, CAND_KEYS["nome"]),
+        "endereco": pick_first(item, CAND_KEYS["endereco"]),
+        "numero": pick_first(item, CAND_KEYS["numero"]),
+        "dre": pick_first(item, CAND_KEYS["dre"]),
+        "raw": item,  # mantém o bruto para depuração
+    }
+
+def best_match(query: str, candidates: list):
+    """Retorna o item com maior similaridade no campo nome."""
+    if not candidates:
+        return None
+    scored = []
+    for item in candidates:
+        nome = pick_first(item, CAND_KEYS["nome"]) if isinstance(item, dict) else ""
+        score = fuzz.token_sort_ratio(query or "", nome or "")
+        scored.append((score, item))
+    scored.sort(key=lambda t: t[0], reverse=True)
+    return scored[0][1] if scored else None
+
+    
+# final
+@@@@@
+
+

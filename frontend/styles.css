@@ -100,6 +100,11 @@ button.copy-btn {
     font-size: 16px;
     color: #3498db;
 }
+/* botão de copiar logo abaixo do scrollbox, sem espaço */
+.result-box .copy-btn {
+  margin-top: 0 !important;  /* sem espaço acima */
+  display: inline-block;      /* ficam lado a lado */
+}
 
 /* Box de mensagens flutuantes */
 .toast {
@@ -113,6 +118,25 @@ button.copy-btn {
     box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
     display: none; /* por padrão escondido */
     z-index: 9999;
+}
+
+    /* === Força fonte Verdana 12px no scrollbox de resultados === */
+    pre.form-control.result-text {
+    font-family: Verdana, sans-serif !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    padding: 8px 10px;
+    height: calc(1.4em * 7 + 16px) !important;  /* altura para 7 linhas */
+    min-height: calc(1.4em * 7 + 16px) !important;
+    max-height: calc(1.4em * 7 + 16px) !important;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    }
+
+/* o scroll fica no bloco (não limite o #results) */
+#results { 
+  overflow-y: visible; 
 }
 
 /* Responsividade */
@@ -140,5 +164,22 @@ button.copy-btn {
     .copy-icon {
         font-size: 14px;
     }
+    /* Força Verdana tamanho 12px reais no scrollbox */
+    #results .result-box pre.form-control.result-text {
+    font-family: Verdana, sans-serif !important;
+    font-size: 16pt !important;       /* <<< aqui, em pontos, fica maior que 12px */
+    line-height: 20px !important;     /* altura de linha proporcional */
+    padding: 8px 10px !important;
+    height: 140px !important;         /* 8 × 18px = ~8 linhas, ajusta conforme precisar */
+    min-height: 144px !important;
+    max-height: 144px !important;
+    overflow-y: auto !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    }
+
+
 }
-# final
+
+
+/* final */

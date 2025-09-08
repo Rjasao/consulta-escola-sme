@@ -126,4 +126,7 @@ Guia passo a passo para iniciar a busca na API EscolaAberta
 - Sandbox e Produção podem ser alternados alterando base_url no frontend ou .env ->
 - Para mobile e tablets, o layout se adapta automaticamente (Bootstrap + CSS) ->
 
+
+
+
 final

@@ -8,7 +8,16 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-ADD_PY_PATH = os.path.join(os.path.dirname(__file__), "add.py")
+# Caminho para o script add.py a ser iniciado/parado. Por padrão,
+# utiliza o caminho relativo à pasta backend. Para ambientes Windows
+# onde o projeto foi extraído em uma localização específica, você pode
+# configurar um caminho absoluto através da variável de ambiente
+# ADD_PY_PATH ou editar diretamente o valor abaixo. Exemplo:
+#   ADD_PY_PATH = r"C:\\Users\\rjasa\\Desktop\\consulta-escola-sme\\backend\\add.py"
+ADD_PY_PATH = os.environ.get(
+    "ADD_PY_PATH",
+    os.path.join(os.path.dirname(__file__), "add.py")
+)
 flask_process = None
 
 @app.post("/api/server/start")
@@ -35,4 +44,6 @@ def shutdown_server():
 
 if __name__ == "__main__":
     app.run(port=5050, debug=True)
+
+    
 # final

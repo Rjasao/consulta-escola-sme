@@ -1,5 +1,4 @@
-<!-- inicio - index.html -->
-<!-- index.html -->
+<!-- inicio - consulta_escola_sme/consulta-escola-sme/frontend/index.html -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,56 +7,359 @@
 <title>Consulta EscolaAberta SP</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+    .navbar-toggler { border: none; }
+    .navbar-toggler:focus { box-shadow: none; }
+    .offcanvas .clear-btn { margin-top: 4px; }
+</style>
 </head>
 <body>
-    
-<div class="container my-4">
-    <h2 class="mb-4">Consulta EscolaAberta - SP</h2>
 
-    <!-- Botões Conectar e Servidor -->
-    <div class="mb-3 d-flex flex-wrap gap-2">
-        <button id="btn-connect" class="btn btn-primary">Conectar</button>
-        <button id="btn-server" class="btn btn-secondary">Servidor: OFF</button>
+<!-- Barra superior com menu hambúrguer -->
+<nav class="navbar navbar-light bg-light mb-3">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <span class="navbar-brand mb-0 h4 ms-2">Consulta EscolaAberta - SP</span>
     </div>
+</nav>
 
-    <!-- Inputs das chaves e token -->
-    <div class="input-box mb-2">
-        <label for="consumer_key" class="form-label">Chave do Consumidor</label>
-        <input type="text" id="consumer_key" class="form-control">
-        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_key">Apagar</button>
-    </div>
-
-    <div class="input-box mb-2">
-        <label for="consumer_secret" class="form-label">Segredo do Consumidor</label>
-        <input type="text" id="consumer_secret" class="form-control">
-        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="consumer_secret">Apagar</button>
-    </div>
-
-    <div class="input-box mb-2">
-        <label for="access_token" class="form-label">Token de Acesso</label>
-        <input type="text" id="access_token" class="form-control" readonly>
-        <button class="clear-btn btn btn-sm btn-outline-secondary mt-1" data-target="access_token">Apagar</button>
-    </div>
-
-    <!-- Busca de escolas -->
-    <div class="input-box mb-3">
-        <label for="school_name" class="form-label">Nome da Escola</label>
-        <input type="text" id="school_name" class="form-control">
-        <div class="mt-2 d-flex gap-2">
-            <button class="search-btn btn btn-success" id="btn-search">Buscar</button>
-            <button class="clear-btn btn btn-outline-secondary" id="btn-clear-search">Apagar busca</button>
+<div class="container">
+<!-- Menu recolhível para conectar e credenciais -->
+<div class="mb-3">
+    <button class="btn btn-link p-0" data-bs-toggle="collapse" data-bs-target="#credentialsCollapse" aria-expanded="false" aria-controls="credentialsCollapse">
+        <span class="fw-bold">▼ Menu Conectar</span>
+    </button>
+    <div class="collapse" id="credentialsCollapse">
+        <!-- Chave do Consumidor -->
+        <div class="mb-2">
+            <label for="consumer_key" class="form-label">Chave do Consumidor</label>
+            <div class="input-group">
+                <input type="text" id="consumer_key" class="form-control">
+                <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="consumer_key">Apagar</button>
+            </div>
+        </div>
+        <!-- Segredo do Consumidor -->
+        <div class="mb-2">
+            <label for="consumer_secret" class="form-label">Segredo do Consumidor</label>
+            <div class="input-group">
+                <input type="text" id="consumer_secret" class="form-control">
+                <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="consumer_secret">Apagar</button>
+            </div>
+        </div>
+        <!-- Botão para salvar as chaves -->
+        <div class="mb-2">
+            <button id="btn-save-keys" class="btn btn-info">Salvar Chaves</button>
+        </div>
+        <!-- Token de acesso -->
+        <div class="mb-2">
+            <label for="access_token" class="form-label">Token de Acesso</label>
+            <div class="input-group">
+                <input type="text" id="access_token" class="form-control" readonly>
+                <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="access_token">Apagar</button>
+            </div>
+        </div>
+        <!-- Botão Conectar dentro do menu -->
+        <div class="mb-2">
+            <button id="btn-connect" class="btn btn-primary w-100">Conectar</button>
         </div>
     </div>
+</div>
 
-    <!-- Resultados -->
+<!-- Campo fixo de busca por Nome da Escola -->
+<div class="mb-2">
+    <label for="search" class="form-label">Nome da Escola</label>
+    <div class="input-group">
+        <input type="text" id="search" class="form-control" placeholder="Nome da Escola">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="search">Apagar</button>
+    </div>
+</div>
+
+<!-- Demais filtros (aparecem conforme seleção no menu) -->
+<div class="mb-2 filter-field" data-filter="page" style="display:none;">
+    <label for="page" class="form-label">Número da página</label>
+    <div class="input-group">
+        <input type="number" id="page" class="form-control" placeholder="nº da página">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="page">Apagar</button>
+    </div>
+</div>
+<div class="mb-2 filter-field" data-filter="dre" style="display:none;">
+    <label for="dre" class="form-label">DRE</label>
+    <div class="input-group">
+        <input type="text" id="dre" class="form-control" placeholder="DRE">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="dre">Apagar</button>
+    </div>
+</div>
+<div class="mb-2 filter-field" data-filter="tipoesc" style="display:none;">
+    <label for="tipoesc" class="form-label">Tipo de Escolas</label>
+    <div class="input-group">
+        <input type="text" id="tipoesc" class="form-control" placeholder="Tipo de Escolas">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="tipoesc">Apagar</button>
+    </div>
+</div>
+<div class="mb-2 filter-field" data-filter="distrito" style="display:none;">
+    <label for="distrito" class="form-label">Distrito</label>
+    <div class="input-group">
+        <input type="text" id="distrito" class="form-control" placeholder="Distrito">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="distrito">Apagar</button>
+    </div>
+</div>
+<div class="mb-2 filter-field" data-filter="bairro" style="display:none;">
+    <label for="bairro" class="form-label">Bairro</label>
+    <div class="input-group">
+        <input type="text" id="bairro" class="form-control" placeholder="Bairro">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="bairro">Apagar</button>
+    </div>
+</div>
+<div class="mb-2 filter-field" data-filter="subpref" style="display:none;">
+    <label for="subpref" class="form-label">Subprefeitura</label>
+    <div class="input-group">
+        <input type="text" id="subpref" class="form-control" placeholder="Subprefeitura">
+        <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="subpref">Apagar</button>
+    </div>
+</div>
+
+
+    <!-- Botões de busca e limpar -->
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <button class="search-btn btn btn-success w-100" id="btn-search-schools">Buscar</button>
+        <button class="clear-btn btn btn-outline-secondary" id="btn-clear-all">Apagar busca</button>
+    </div>
+
+    <!-- Área de resultados -->
     <div id="results" class="mt-3"></div>
+</div>
+
+<!-- Offcanvas com lista de filtros -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="sidebarLabel">Filtros de busca</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-search" data-filter="search" checked disabled>
+            <label class="form-check-label" for="check-search">Nome da Escola</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-page" data-filter="page">
+            <label class="form-check-label" for="check-page">Número da página</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-dre" data-filter="dre">
+            <label class="form-check-label" for="check-dre">DRE</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-tipoesc" data-filter="tipoesc">
+            <label class="form-check-label" for="check-tipoesc">Tipo de Escolas</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-distrito" data-filter="distrito">
+            <label class="form-check-label" for="check-distrito">Distrito</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-bairro" data-filter="bairro">
+            <label class="form-check-label" for="check-bairro">Bairro</label>
+        </div>
+        <div class="form-check mb-2">
+            <input class="form-check-input filter-check" type="checkbox" id="check-subpref" data-filter="subpref">
+            <label class="form-check-label" for="check-subpref">Subprefeitura</label>
+        </div>
+        <!-- ... Filtros de busca já existentes -->
+<hr>
+<h6>Campos do resultado</h6>
+
+<!-- Campos sempre ativos e desabilitados -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-codesc" data-field="codesc" checked>
+    <label class="form-check-label" for="field-codesc">Código da EU</label>
+</div>
+
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-situacao" data-field="situacao" checked>
+    <label class="form-check-label" for="field-situacao">Situação</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-rede" data-field="rede" checked>
+    <label class="form-check-label" for="field-rede">Rede</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-nomesc" data-field="nomesc" checked>
+    <label class="form-check-label" for="field-nomesc">Nome da UE</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dre" data-field="dre" checked>
+    <label class="form-check-label" for="field-dre">DRE</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-diretoria" data-field="diretoria" checked>
+    <label class="form-check-label" for="field-diretoria">Diretoria</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-distrito" data-field="distrito" checked>
+    <label class="form-check-label" for="field-distrito">Distrito</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-endereco" data-field="endereco" checked>
+    <label class="form-check-label" for="field-endereco">End.</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-numero" data-field="numero" checked>
+    <label class="form-check-label" for="field-numero">Nº</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-bairro" data-field="bairro" checked>
+    <label class="form-check-label" for="field-bairro">Bairro</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-cep" data-field="cep" checked>
+    <label class="form-check-label" for="field-cep">CEP</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-tel1" data-field="tel1" checked>
+    <label class="form-check-label" for="field-tel1">Tel. 01</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-tel2" data-field="tel2" checked>
+    <label class="form-check-label" for="field-tel2">Tel. 02</label>
+</div>
+
+<!-- Campos adicionais (opcionais, inicialmente não marcados) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-email" data-field="email">
+    <label class="form-check-label" for="field-email">Email</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-nomescofi" data-field="nomescofi">
+    <label class="form-check-label" for="field-nomescofi">Nome da UE Cofi</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-subpref" data-field="subpref">
+    <label class="form-check-label" for="field-subpref">Subprefeitura</label>
+</div>
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-coddist" data-field="coddist">
+    <label class="form-check-label" for="field-coddist">Cod Distrito</label>
+</div>
+
+
+
+<!-- Cod Distrito (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-coddist" data-field="coddist">
+    <label class="form-check-label" for="field-coddist">Cod Distrito</label>
+</div>
+
+<!-- Setor (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-setor" data-field="setor">
+    <label class="form-check-label" for="field-setor">Setor</label>
+</div>
+
+<!-- Codigo Nep (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-codinep" data-field="codinep">
+    <label class="form-check-label" for="field-codinep">Codigo Nep</label>
+</div>
+
+<!-- CD CIE (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-cd_cie" data-field="cd_cie">
+    <label class="form-check-label" for="field-cd_cie">CD CIE</label>
+</div>
+
+<!-- EH (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-eh" data-field="eh">
+    <label class="form-check-label" for="field-eh">EH</label>
+</div>
+
+<!-- Data da Criação (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dt_criacao" data-field="dt_criacao">
+    <label class="form-check-label" for="field-dt_criacao">Data da Criação</label>
+</div>
+
+<!-- Ato da Criação (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-ato_criacao" data-field="ato_criacao">
+    <label class="form-check-label" for="field-ato_criacao">Ato da Criação</label>
+</div>
+
+<!-- Dom. da Criação (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dom_criacao" data-field="dom_criacao">
+    <label class="form-check-label" for="field-dom_criacao">Dom. da Criação</label>
+</div>
+
+<!-- Data início da Conv. (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dt_ini_conv" data-field="dt_ini_conv">
+    <label class="form-check-label" for="field-dt_ini_conv">Data inicio da Conv.</label>
+</div>
+
+<!-- Data início da Func. (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dt_ini_func" data-field="dt_ini_func">
+    <label class="form-check-label" for="field-dt_ini_func">Data inicio da Func.</label>
+</div>
+
+<!-- Data início da Autorização (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dt_autoriza" data-field="dt_autoriza">
+    <label class="form-check-label" for="field-dt_autoriza">Data inicio da Autorização</label>
+</div>
+
+<!-- Data da Extinção (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-dt_extintao" data-field="dt_extintao">
+    <label class="form-check-label" for="field-dt_extintao">Data da Extinção</label>
+</div>
+
+<!-- Nome Anterior (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-nome_ant" data-field="nome_ant">
+    <label class="form-check-label" for="field-nome_ant">Nome Anterior</label>
+</div>
+
+<!-- Latitude (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-latitude" data-field="latitude">
+    <label class="form-check-label" for="field-latitude">Latitude</label>
+</div>
+
+<!-- Longitude (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-longitude" data-field="longitude">
+    <label class="form-check-label" for="field-longitude">Longitude</label>
+</div>
+
+<!-- Data Base (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-database" data-field="database">
+    <label class="form-check-label" for="field-database">Data Base</label>
+</div>
+
+<!-- CEU (desmarcado) -->
+<div class="form-check mb-2">
+    <input class="form-check-input field-check" type="checkbox" id="field-ceu" data-field="ceu">
+    <label class="form-check-label" for="field-ceu">CEU</label>
+</div>
+
+<!-- Repita para os demais campos opcionais (setor, codinep, cd_cie, eh, etc.) -->
+
+    </div>
 </div>
 
 <!-- Toast de feedback -->
 <div id="toast" class="toast position-fixed bottom-0 end-0 m-3 p-2 rounded" style="display:none; color:white;"></div>
 
 <!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
+
+
 <!-- final -->

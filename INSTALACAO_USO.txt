@@ -1,0 +1,92 @@
+1. PROJETO
+   Busca Cad Escolas SP
+   Aplicativo para consultar informações de escolas municipais de São Paulo usando a API Escola Aberta.
+
+2. SISTEMA OPERACIONAL
+   Windows 11
+
+3. PROGRAMAS E RECURSOS NECESSÁRIOS
+
+   3.1 Python 3.11+  
+       - Necessário para rodar o backend (Flask)  
+       - Download: https://www.python.org/downloads/windows/
+
+       INSTALAÇÃO PELO CMD OU POWERSHELL:
+       3.1.1 CMD:
+           - Baixe o instalador do Python 3.11
+           - Execute: python-3.11.x-amd64.exe
+           - Marque: "Add Python to PATH"
+           - Verifique: python --version
+       3.1.2 PowerShell:
+           - Baixe o instalador
+           - Execute: Start-Process python-3.11.x-amd64.exe
+           - Verifique: python --version
+
+   3.2 Pip (gerenciador de pacotes Python)
+       - Já incluído nas versões recentes do Python
+       - Verifique: pip --version
+
+   3.3 Virtualenv (opcional, mas recomendado)
+       - Cria ambiente isolado para o projeto
+       - INSTALAÇÃO: pip install virtualenv
+       - Verifique: virtualenv --version
+
+   3.4 Git (opcional, para clonar repositório)
+       - Download: https://git-scm.com/download/win
+       - Verifique: git --version
+
+   3.5 Navegador moderno
+       - Chrome, Firefox ou Edge
+       - Para acessar a interface frontend
+
+4. INSTALAÇÃO E CONFIGURAÇÃO DO PROJETO
+
+   4.1 Abrir CMD ou PowerShell
+   4.2 Navegar até a pasta do projeto
+       Exemplo: cd C:\Users\SeuUsuario\Downloads\busca_cad_escolas_sp
+   4.3 Criar e ativar ambiente virtual (recomendado)
+       4.3.1 CMD:
+           python -m venv venv
+           venv\Scripts\activate
+       4.3.2 PowerShell:
+           python -m venv venv
+           .\venv\Scripts\Activate.ps1
+   4.4 Instalar dependências do backend
+       pip install -r backend\requirements.txt
+
+5. CONFIGURAÇÃO DA API
+
+   5.1 Abra o arquivo backend\config.py
+   5.2 Insira suas chaves da API e o endpoint desejado (Sandbox ou Produção)
+       CONSUMER_KEY = "sua_consumer_key"
+       CONSUMER_SECRET = "seu_consumer_secret"
+       ACCESS_TOKEN = "seu_access_token"
+       API_URL = API_SANDBOX  # ou API_PRODUCAO
+
+6. EXECUÇÃO DO BACKEND
+
+   6.1 CMD:
+       cd backend
+       python app.py
+   6.2 PowerShell:
+       cd backend
+       python app.py
+   6.3 O servidor Flask será iniciado na porta 5000
+       URL: http://localhost:5000
+
+7. EXECUÇÃO DO FRONTEND
+
+   7.1 Abra o arquivo frontend\index.html no navegador
+   7.2 Digite o nome da escola
+   7.3 Clique em "Buscar"
+   7.4 O resultado será exibido abaixo do botão
+   7.5 Para limpar, clique em "Limpar"
+
+8. NOTAS IMPORTANTES
+
+   8.1 Sempre inicie o backend antes de usar o frontend
+   8.2 Use Sandbox para testes, Produção para dados reais
+   8.3 Proteja suas chaves da API
+   8.4 Caso mude de computador, repita instalação do Python e dependências
+
+9. 

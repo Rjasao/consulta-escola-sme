@@ -1,0 +1,13 @@
+cd backend
+
+python -m venv venv             		 	# cria um novo ambiente virtual chamado venv
+
+source venv/bin/activate  			# em sistemas Unix/macOS
+
+venv\Scripts\activate.bat			 # em Windows
+
+pip install -r requirements.txt 		 # instala as dependências do projeto
+
+
+
+/final/
