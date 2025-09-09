@@ -1,0 +1,43 @@
+# Guia de Instalação - controller_app
+
+1. Copiar projeto
+   - Copie a pasta "consulta-escola-sme\www\controller_app" para o novo PC.
+
+2. Instalar Python
+   - Baixar Python 3.11+ em https://www.python.org/downloads/
+   - Marcar "Add Python to PATH" na instalação.
+   - Verificar no PowerShell:
+     python --version
+
+3. Criar ambiente virtual
+   - Abrir PowerShell na pasta do projeto:
+     cd C:\Users\SEU_USUARIO\Desktop\consulta-escola-sme\www\controller_app
+   - Criar ambiente:
+     python -m venv venv
+   - Ativar:
+     .\venv\Scripts\activate
+
+4. Instalar dependências
+   - Se existir requirements.txt:
+     pip install -r requirements.txt
+   - Caso contrário, instalar manualmente:
+     pip install flask requests
+
+5. Rodar aplicação
+   - Dentro do venv:
+     python backend_controller.py
+   - Acessar no navegador:
+     http://localhost:5000
+
+6. (Opcional) Gerar executável
+   - Instalar pyinstaller:
+     pip install pyinstaller
+   - Gerar .exe:
+     python -m PyInstaller --onefile --noconsole --name BackendController backend_controller.py
+   - Arquivo final estará em:
+     dist\BackendController.exe
+
+7. Observações
+   - Se usar .env, copie o arquivo com as chaves para o novo PC.
+   - Se usar banco de dados, configure a conexão corretamente.
+   - Caso o antivírus apague o .exe, adicionar exclusão no Windows Defender.
