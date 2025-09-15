@@ -49,15 +49,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSaveKeys      = document.getElementById("btn-save-keys");
     const toast            = document.getElementById("toast");
     const resultsDiv       = document.getElementById("results");
+
+    const resultsPanel     = document.getElementById("results-panel");  // ADICIONE (ok)
+
     const accessTokenInput = document.getElementById("access_token");
     const filterChecks     = document.querySelectorAll(".filter-check");
 
     // 1. Converte entradas de texto para maiúsculas conforme o usuário digita
-    document.querySelectorAll('input[type="text"]').forEach(inp => {
-        inp.addEventListener('input', () => {
-            inp.value = inp.value.toUpperCase();
-        });
+    //document.querySelectorAll('input[type="text"]').forEach(inp => {
+    //    inp.addEventListener('input', () => {
+    //        inp.value = inp.value.toUpperCase();
+    //    });
+    //});
+
+    document.querySelectorAll('input[type="text"]').forEach((inp) => {
+    const id = inp.id || "";
+    // Permite maiúsculas e minúsculas nas chaves:
+    if (id === "consumer_key" || id === "consumer_secret") return;
+
+    // Mantém os demais campos em maiúsculo:
+    inp.addEventListener("input", () => {
+        inp.value = inp.value.toUpperCase();
     });
+    });
+
+
 
     // 2. Carrega chaves salvas (consumer_key e consumer_secret)
     async function loadSavedKeys() {
@@ -85,12 +101,57 @@ document.addEventListener("DOMContentLoaded", () => {
     loadSavedKeys();
 
     // 3. Exibe mensagens de feedback (toast)
-    function showToast(message, success = false) {
-        toast.textContent = message;
-        toast.style.backgroundColor = success ? "#4CAF50" : "#ff4d4f";
-        toast.style.display = "block";
-        setTimeout(() => { toast.style.display = "none"; }, 4000);
-    }
+    //function showToast(message, success = false) {
+    //    toast.textContent = message;
+    //    toast.style.backgroundColor = success ? "#4CAF50" : "#ff4d4f";
+    //    toast.style.display = "block";
+    //    setTimeout(() => { toast.style.display = "none"; }, 4000);
+   // }
+
+function showToast(message, typeOrSuccess = "info", opts = {}) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+
+  // Compat: se for boolean, mapeia p/ success|error
+  const type = (typeof typeOrSuccess === "boolean")
+    ? (typeOrSuccess ? "success" : "error")
+    : String(typeOrSuccess || "info");
+
+  // Cores por tipo
+  const COLORS = {
+    success: "#28a745",
+    error:   "#dc3545",
+    warn:    "#f39c12",
+    info:    "#0d6efd"
+  };
+  toast.style.backgroundColor = COLORS[type] || COLORS.info;
+
+  // Âncora: 'auto' (default) usa o painel se ele estiver visível; senão, viewport
+  const anchor = opts.anchor || "auto";
+  const panelVisible = !!(resultsPanel && !resultsPanel.hasAttribute("hidden"));
+
+  if (anchor === "panel" || (anchor === "auto" && panelVisible)) {
+    // Move o toast para dentro do painel
+    try { resultsPanel.appendChild(toast); } catch {}
+    toast.classList.add("in-panel");
+    // Remove utilitários Bootstrap de posição fixa na viewport, se existirem
+    toast.classList.remove("position-fixed","bottom-0","end-0","m-3");
+  } else {
+    // Move o toast de volta para o body e usa posição fixa na viewport
+    try { document.body.appendChild(toast); } catch {}
+    toast.classList.remove("in-panel");
+    toast.classList.add("position-fixed","bottom-0","end-0","m-3");
+  }
+
+  toast.textContent = message;
+  toast.style.display = "block";
+
+  // Duração
+  const ms = Number.isFinite(opts.duration) ? opts.duration : 3000;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.display = "none"; }, ms);
+}
+// fim-------------------------------
 
     // 4. Copia texto para a área de transferência
     function copyToClipboard(text) {
@@ -167,8 +228,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         box.appendChild(copyIcon);
                         resultsDiv.appendChild(box);
                     });
+                    if (resultsPanel) resultsPanel.hidden = false; // << mostrar caixa
                 } else {
                     showToast("Nenhuma correspondência encontrada", false);
+                    if (resultsPanel) resultsPanel.hidden = false; // << mostrar caixa mesmo sem itens
                 }
             } catch (err) {
                 showToast("Erro na busca: " + err.message, false);
@@ -181,6 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const nameField = document.getElementById("school_name");
             if (nameField) nameField.value = "";
             resultsDiv.innerHTML = "";
+            if (resultsPanel) resultsPanel.hidden = true; // << esconder caixa ao limpar (busca antiga)
         });
     }
 
@@ -221,11 +285,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 resultsDiv.classList.remove("overflowing");
                 if (data.error) {
                     showToast(data.error, false);
+                    if (resultsPanel) resultsPanel.hidden = false; // << mostra a caixa com a mensagem
                     return;
                 }
                 const items = Array.isArray(data.results) ? data.results : [];
                 if (items.length === 0) {
                     showToast("Nenhuma escola encontrado", false);
+                    if (resultsPanel) resultsPanel.hidden = false; // << mostra a caixa mesmo vazia
                     return;
                 }
 
@@ -309,7 +375,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     })();
 
                     // 4ª LINHA: endereço
-                    // Formato: ENDERECO, nº: NUMERO -BAIRRO TIPOESC, CEP: CEP, São Paulo - SP
                     (function buildAddressLine() {
                         const cbEnd   = document.querySelector(`.field-check[data-field="endereco"]`);
                         const cbNum   = document.querySelector(`.field-check[data-field="numero"]`);
@@ -332,97 +397,68 @@ document.addEventListener("DOMContentLoaded", () => {
                         const vCep  = hasCep  ? (item['cep']      ?? "") : "";
 
                         let out = "";
-
-                        if (vEnd) {
-                            out += `${vEnd}`;
-                        }
-                        if (vNum) {
-                            out += (out ? `, nº: ${vNum}` : `nº: ${vNum}`);
-                        }
-                        if (vBai) {
-                            // garante 1 espaço antes do '-' e NENHUM após o '-'
-                            out = out.trimEnd();
-                            out += ` - ${vBai}`;
-                        }
-                        if (vTipo) {
-                            out += (out ? ` ${vTipo}` : `${vTipo}`);
-                        }
-                        if (vCep) {
-                            out += (out ? `, CEP: ${vCep}` : `CEP: ${vCep}`);
-                        }
+                        if (vEnd)  out += `${vEnd}`;
+                        if (vNum)  out += (out ? `, nº: ${vNum}` : `nº: ${vNum}`);
+                        if (vBai)  { out = out.trimEnd(); out += ` - ${vBai}`; }
+                        if (vTipo) out += (out ? ` ${vTipo}` : `${vTipo}`);
+                        if (vCep)  out += (out ? `, CEP: ${vCep}` : `CEP: ${vCep}`);
                         out += (out ? `, São Paulo - SP` : `São Paulo - SP`);
-
                         lines.push(out);
                     })();
 
-                    // Demais campos selecionados (exceto os já utilizados nas linhas acima)
+                    // Demais campos selecionados
                     document.querySelectorAll('.field-check:checked').forEach(cb => {
                         const field = cb.getAttribute('data-field');
                         const skip = new Set([
-                            'nomesc', 'dre',                       // 1ª linha
-                            'diretoria', 'distrito',               // 2ª linha
-                            'codesc', 'situacao', 'rede',          // 3ª linha
-                            'endereco', 'numero', 'bairro', 'tipoesc', 'cep' // 4ª linha
+                            'nomesc','dre','diretoria','distrito','codesc','situacao','rede',
+                            'endereco','numero','bairro','tipoesc','cep'
                         ]);
                         if (skip.has(field)) return;
-
                         const label = fieldLabels[field] || field;
                         const value = item[field];
                         lines.push(`${label}: ${value !== undefined && value !== null ? value : ""}`);
                     });
 
-// Renderização no <pre> com bold
-pre.innerHTML = lines.join("\n");
+                    // Renderização no <pre> com bold
+                    pre.innerHTML = lines.join("\n");
 
-// Botão "Copiar" (copia tudo)
-const copyBtn = document.createElement("button");
-copyBtn.className = "btn btn-sm btn-primary copy-btn";
-copyBtn.textContent = "Copiar";
-copyBtn.addEventListener("click", () => {
-    copyToClipboard(pre.innerText); // copia texto sem tags
-});
+                    // Botões de cópia
+                    const copyBtn = document.createElement("button");
+                    copyBtn.className = "btn btn-sm btn-primary copy-btn";
+                    copyBtn.textContent = "Copiar";
+                    copyBtn.addEventListener("click", () => {
+                        copyToClipboard(pre.innerText);
+                    });
 
-// Botão "Copia End." (copia apenas a linha do endereço)
-const copyEndBtn = document.createElement("button");
-copyEndBtn.className = "btn btn-sm btn-secondary copy-btn";
-copyEndBtn.textContent = "Copia End.";
-copyEndBtn.style.marginLeft = "6px"; // pequeno espaço entre os botões
+                    const copyEndBtn = document.createElement("button");
+                    copyEndBtn.className = "btn btn-sm btn-secondary copy-btn";
+                    copyEndBtn.textContent = "Copia End.";
+                    copyEndBtn.style.marginLeft = "6px";
+                    copyEndBtn.addEventListener("click", () => {
+                        const linesArr = pre.innerText.split("\n").map(l => l.trimEnd());
+                        let addrLine = linesArr.find(l => /São Paulo - SP|CEP:\s*\S|nº:\s*\S|Nº:\s*\S/.test(l));
+                        if (!addrLine && linesArr.length >= 4) addrLine = linesArr[3];
+                        if (addrLine && addrLine.length) copyToClipboard(addrLine.trim());
+                        else showToast("Não há linha de endereço para copiar.", false);
+                    });
 
-copyEndBtn.addEventListener("click", () => {
-    const linesArr = pre.innerText.split("\n").map(l => l.trimEnd());
-
-    // tenta identificar a linha do endereço por conteúdo
-    let addrLine = linesArr.find(l =>
-        /São Paulo - SP|CEP:\s*\S|nº:\s*\S|Nº:\s*\S/.test(l)
-    );
-
-    // fallback: se não achar por padrão, pega a 4ª linha (índice 3)
-    if (!addrLine && linesArr.length >= 4) {
-        addrLine = linesArr[3];
-    }
-
-    if (addrLine && addrLine.length) {
-        copyToClipboard(addrLine.trim());
-    } else {
-        showToast("Não há linha de endereço para copiar.", false);
-    }
-});
-
-// adiciona ao DOM (botões logo abaixo do scrollbox, sem espaço acima)
-resultWrapper.appendChild(pre);
-resultWrapper.appendChild(copyBtn);
-resultWrapper.appendChild(copyEndBtn);
-resultsDiv.appendChild(resultWrapper);
+                    // adiciona ao DOM
+                    resultWrapper.appendChild(pre);
+                    resultWrapper.appendChild(copyBtn);
+                    resultWrapper.appendChild(copyEndBtn);
+                    resultsDiv.appendChild(resultWrapper);
                 });
 
-                // Se houver overflow vertical (mais de 4–5 linhas), pinta o fundo rosa-claro
+                // Se houver overflow vertical
                 if (resultsDiv.scrollHeight > resultsDiv.clientHeight) {
                     resultsDiv.classList.add("overflowing");
                 }
 
+                if (resultsPanel) resultsPanel.hidden = false; // << mostrar caixa com resultados
                 showToast(`Encontradas ${data.count || items.length} escola(s)`, true);
             } catch (err) {
                 showToast("Erro na busca: " + err.message, false);
+                if (resultsPanel) resultsPanel.hidden = false; // << mostra a caixa para ver mensagens
             }
         });
     }
@@ -444,6 +480,7 @@ resultsDiv.appendChild(resultWrapper);
             });
             resultsDiv.innerHTML = "";
             resultsDiv.classList.remove("overflowing");
+            if (resultsPanel) resultsPanel.hidden = true; // << esconder caixa ao limpar
         });
     }
 

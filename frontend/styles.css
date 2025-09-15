@@ -10,11 +10,20 @@ body {
     color: #333;
 }
 
-.container {
+
+/* .container {
     max-width: 960px;
     margin: 20px auto;
     padding: 15px;
+}*/
+
+
+.container {
+    max-width: 960px;
+    margin: 20px 0;   /* remove o 'auto' que centraliza */
+    padding: 15px;
 }
+
 
 /* Boxes de input e token */
 .input-box {
@@ -109,16 +118,21 @@ button.copy-btn {
 /* Box de mensagens flutuantes */
 .toast {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #ff4d4f;
+    bottom: 16px;   /* canto inferior direito */
+    right: 16px;
+    background-color: #ff4d4f; /* default, JS ajusta por tipo */
     color: #fff;
-    padding: 12px 18px;
-    border-radius: 6px;
-    box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
-    display: none; /* por padrão escondido */
-    z-index: 9999;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    display: none; /* escondido por padrão */
+    z-index: 2000; /* acima de offcanvas/bootstrap (>= 1045) */
+    min-width: 260px;
+    max-width: 420px;
+    word-wrap: break-word;
+    pointer-events: none; /* não intercepta cliques do app */
 }
+
 
     /* === Força fonte Verdana 12px no scrollbox de resultados === */
     pre.form-control.result-text {
@@ -160,10 +174,15 @@ button.copy-btn {
     }
 }
 
+
+
+
 @media (max-width: 480px) {
+  .toast { left: 8px; right: 8px; bottom: 8px; min-width: auto; max-width: none; }
     .copy-icon {
         font-size: 14px;
     }
+
     /* Força Verdana tamanho 12px reais no scrollbox */
     #results .result-box pre.form-control.result-text {
     font-family: Verdana, sans-serif !important;
@@ -179,6 +198,26 @@ button.copy-btn {
     }
 
 
+}
+
+/* Caixa de resultados com scrollbox */
+.results-panel {
+  background: #fff;
+  border: 1px solid #f4f6f8;  /* cor do fundo da página */
+  border-radius: 8px;
+  max-height: 360px;          /* altura máxima visível */
+  overflow-y: auto;           /* scroll vertical */
+  padding: 12px;
+}
+
+/* Permite ancorar o toast dentro do painel de resultados */
+.results-panel { position: relative; }
+
+/* Toast ancorado ao painel (quando a classe .in-panel estiver ativa) */
+.toast.in-panel {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
 }
 
 
