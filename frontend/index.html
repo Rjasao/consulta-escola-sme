@@ -35,7 +35,7 @@
 
   <!-- Campo fixo de busca por Nome da Escola -->
   <div class="mb-2">
-    <label for="search" class="form-label">Nome da Escola</label>
+    <label for="search" class="form-label">Nome da Escola <span class="ms-3" id="codigo-ue-wrap"><strong>Código da UE:</strong> <span id="codigo-ue-label">—</span> <strong class="ms-3">Mod:</strong> <span id="mod-label">—</span></span></label>
     <div class="input-group">
       <input type="text" id="search" class="form-control" placeholder="Nome da Escola">
       <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="search">Apagar</button>
@@ -92,29 +92,19 @@
   </div>
 
   <!-- Botões de busca e limpar -->
-<div class="mb-3 d-flex justify-content-between gap-2">
-  <button class="search-btn btn btn-success flex-fill" id="btn-search-schools">Buscar</button>
-  <button class="clear-btn btn btn-outline-secondary" id="btn-clear-all">Apagar busca</button>
+  <div class="mb-3 d-flex justify-content-between gap-2">
+    <button class="search-btn btn btn-success flex-fill" id="btn-search-schools">Buscar</button>
+    <button class="clear-btn btn btn-outline-secondary" id="btn-clear-all">Apagar busca</button>
+  </div>
+
+  <!-- Painel de resultados (inicialmente oculto) -->
+  <div id="results-panel" class="results-panel mt-3" hidden>
+    <div id="results"></div>
+<!-- Painel MODE (abaixo do results-panel) -->
+<div id="mode-panel" class="mt-3" hidden class="mt-3 border border-success rounded p-2">
+  <div id="mode-scroll" class="exscrollbox bg-lightgreen"></div>
 </div>
-
-
-
-<!-- Painel de resultados (inicialmente oculto) -->
-<div id="results-panel" class="results-panel mt-3" hidden>
-  <div id="results"></div>
-</div>
-
-
-
-<!-- Área de resultados 
-  <div id="results" class="mt-3"></div>-->
-
-<!-- Painel de resultados (inicialmente oculto) -->
-<div id="results-panel" class="results-panel mt-3" hidden>
-  <div id="results"></div>
-
-</div>
-
+  </div>
 
 </div>
 
@@ -157,12 +147,11 @@
     <hr>
     <h6>Campos do resultado</h6>
 
-    <!-- Campos sempre ativos e desabilitados -->
+    <!-- Campos default -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-codesc" data-field="codesc" checked>
         <label class="form-check-label" for="field-codesc">Código da EU</label>
     </div>
-
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-situacao" data-field="situacao" checked>
         <label class="form-check-label" for="field-situacao">Situação</label>
@@ -212,7 +201,7 @@
         <label class="form-check-label" for="field-tel2">Tel. 02</label>
     </div>
 
-    <!-- Campos adicionais (opcionais, inicialmente não marcados) -->
+    <!-- Campos adicionais -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-email" data-field="email">
         <label class="form-check-label" for="field-email">Email</label>
@@ -229,106 +218,66 @@
         <input class="form-check-input field-check" type="checkbox" id="field-coddist" data-field="coddist">
         <label class="form-check-label" for="field-coddist">Cod Distrito</label>
     </div>
-
-
-
-    <!-- Cod Distrito (desmarcado) -->
-    <div class="form-check mb-2">
-        <input class="form-check-input field-check" type="checkbox" id="field-coddist" data-field="coddist">
-        <label class="form-check-label" for="field-coddist">Cod Distrito</label>
-    </div>
-
-    <!-- Setor (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-setor" data-field="setor">
         <label class="form-check-label" for="field-setor">Setor</label>
     </div>
-
-    <!-- Codigo Nep (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-codinep" data-field="codinep">
         <label class="form-check-label" for="field-codinep">Codigo Nep</label>
     </div>
-
-    <!-- CD CIE (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-cd_cie" data-field="cd_cie">
         <label class="form-check-label" for="field-cd_cie">CD CIE</label>
     </div>
-
-    <!-- EH (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-eh" data-field="eh">
         <label class="form-check-label" for="field-eh">EH</label>
     </div>
-
-    <!-- Data da Criação (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dt_criacao" data-field="dt_criacao">
         <label class="form-check-label" for="field-dt_criacao">Data da Criação</label>
     </div>
-
-    <!-- Ato da Criação (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-ato_criacao" data-field="ato_criacao">
         <label class="form-check-label" for="field-ato_criacao">Ato da Criação</label>
     </div>
-
-    <!-- Dom. da Criação (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dom_criacao" data-field="dom_criacao">
         <label class="form-check-label" for="field-dom_criacao">Dom. da Criação</label>
     </div>
-
-    <!-- Data início da Conv. (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dt_ini_conv" data-field="dt_ini_conv">
         <label class="form-check-label" for="field-dt_ini_conv">Data inicio da Conv.</label>
     </div>
-
-    <!-- Data início da Func. (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dt_ini_func" data-field="dt_ini_func">
         <label class="form-check-label" for="field-dt_ini_func">Data inicio da Func.</label>
     </div>
-
-    <!-- Data início da Autorização (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dt_autoriza" data-field="dt_autoriza">
         <label class="form-check-label" for="field-dt_autoriza">Data inicio da Autorização</label>
     </div>
-
-    <!-- Data da Extinção (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-dt_extintao" data-field="dt_extintao">
         <label class="form-check-label" for="field-dt_extintao">Data da Extinção</label>
     </div>
-
-    <!-- Nome Anterior (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-nome_ant" data-field="nome_ant">
         <label class="form-check-label" for="field-nome_ant">Nome Anterior</label>
     </div>
-
-    <!-- Latitude (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-latitude" data-field="latitude">
         <label class="form-check-label" for="field-latitude">Latitude</label>
     </div>
-
-    <!-- Longitude (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-longitude" data-field="longitude">
         <label class="form-check-label" for="field-longitude">Longitude</label>
     </div>
-
-    <!-- Data Base (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-database" data-field="database">
         <label class="form-check-label" for="field-database">Data Base</label>
     </div>
-
-    <!-- CEU (desmarcado) -->
     <div class="form-check mb-2">
         <input class="form-check-input field-check" type="checkbox" id="field-ceu" data-field="ceu">
         <label class="form-check-label" for="field-ceu">CEU</label>
@@ -377,6 +326,52 @@
       <button id="btn-connect" class="btn btn-primary w-100">Conectar</button>
     </div>
 
+    <!-- NOVA SEÇÃO: Itens a consultar (checkbox exclusivo) -->
+    <hr>
+    <h6>--------- Itens a consultar ---------</h6>
+    <div id="consulta-options">
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-alunosserieturno" value="alunosserieturno">
+        <label class="form-check-label" for="chk-alunosserieturno">alunosserieturno</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-ambientesbyescola" value="ambientesbyescola">
+        <label class="form-check-label" for="chk-ambientesbyescola">ambientesbyescola</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-modalidades" value="modalidades">
+        <label class="form-check-label" for="chk-modalidades">modalidades</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-seriesestudantes" value="seriesestudantes">
+        <label class="form-check-label" for="chk-seriesestudantes">seriesestudantes</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-servatuacao" value="servatuacao">
+        <label class="form-check-label" for="chk-servatuacao">servatuacao</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-servidores" value="servidores">
+        <label class="form-check-label" for="chk-servidores">servidores</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-totservatuacao" value="totservatuacao">
+        <label class="form-check-label" for="chk-totservatuacao">totservatuacao</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-totservescolarizacao" value="totservescolarizacao">
+        <label class="form-check-label" for="chk-totservescolarizacao">totservescolarizacao</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-totvagmatbyserie" value="totvagmatbyserie">
+        <label class="form-check-label" for="chk-totvagmatbyserie">totvagmatbyserie</label>
+      </div>
+      <div class="form-check mb-1">
+        <input type="checkbox" class="form-check-input consulta-check" id="chk-turmaserieturno" value="turmaserieturno">
+        <label class="form-check-label" for="chk-turmaserieturno">turmaserieturno</label>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -384,5 +379,30 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
+
+<script>
+(function() {
+  function byId(id){ return document.getElementById(id); }
+  function bothLabelsHaveValue() {
+    const cod = byId("codigo-ue-label")?.textContent?.trim() || "—";
+    const mod = byId("mod-label")?.textContent?.trim() || "—";
+    return (cod !== "—" && cod.length > 0) && (mod !== "—" && mod.length > 0);
+  }
+  function updateModePanel() {
+    const panel = byId("mode-panel");
+    if (!panel) return;
+    panel.hidden = !bothLabelsHaveValue();
+  }
+  document.addEventListener("DOMContentLoaded", updateModePanel);
+  if (window.MutationObserver) {
+    const codEl = byId("codigo-ue-label");
+    const modEl = byId("mod-label");
+    const obs = new MutationObserver(updateModePanel);
+    if (codEl) obs.observe(codEl, { childList: true, characterData: true, subtree: true });
+    if (modEl) obs.observe(modEl, { childList: true, characterData: true, subtree: true });
+  }
+})();
+</script>
+
 </body>
 </html>

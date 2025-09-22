@@ -220,5 +220,17 @@ button.copy-btn {
   bottom: 12px;
 }
 
+/* destaque do resultado selecionado */
+.result-text.result-selected {
+  background-color: #ccffcc !important; /* verde claro */
+  border-color: #99cc99 !important;
+}
+
+/* se usar a busca antiga (que usa .result-box), cobre também */
+.result-box.result-selected {
+  background-color: #ccffcc !important;
+  border-color: #99cc99 !important;
+}
+
 
 /* final */
