@@ -11,6 +11,11 @@
   .navbar-toggler:focus { box-shadow: none; }
   .offcanvas .clear-btn { margin-top: 4px; }
 </style>
+
+<div id="ultima-atualizacao" style="font-size:13px;color:#555;margin-bottom:8px;">
+  Última atualização: —
+</div>
+
 </head>
 <body>
 
@@ -332,43 +337,43 @@
     <div id="consulta-options">
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-alunosserieturno" value="alunosserieturno">
-        <label class="form-check-label" for="chk-alunosserieturno">alunosserieturno</label>
+        <label class="form-check-label" for="chk-alunosserieturno">Alunos/Serie/Turno</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-ambientesbyescola" value="ambientesbyescola">
-        <label class="form-check-label" for="chk-ambientesbyescola">ambientesbyescola</label>
+        <label class="form-check-label" for="chk-ambientesbyescola">Ambientes da escola</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-modalidades" value="modalidades">
-        <label class="form-check-label" for="chk-modalidades">modalidades</label>
+        <label class="form-check-label" for="chk-modalidades">Modalidades</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-seriesestudantes" value="seriesestudantes">
-        <label class="form-check-label" for="chk-seriesestudantes">seriesestudantes</label>
+        <label class="form-check-label" for="chk-seriesestudantes">Series estudantes</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-servatuacao" value="servatuacao">
-        <label class="form-check-label" for="chk-servatuacao">servatuacao</label>
+        <label class="form-check-label" for="chk-servatuacao">Servico e atuacao</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-servidores" value="servidores">
-        <label class="form-check-label" for="chk-servidores">servidores</label>
+        <label class="form-check-label" for="chk-servidores">Servidores</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-totservatuacao" value="totservatuacao">
-        <label class="form-check-label" for="chk-totservatuacao">totservatuacao</label>
+        <label class="form-check-label" for="chk-totservatuacao">Total de servidores/atuacao</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-totservescolarizacao" value="totservescolarizacao">
-        <label class="form-check-label" for="chk-totservescolarizacao">totservescolarizacao</label>
+        <label class="form-check-label" for="chk-totservescolarizacao">Total de servidores/escolarizacao</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-totvagmatbyserie" value="totvagmatbyserie">
-        <label class="form-check-label" for="chk-totvagmatbyserie">totvagmatbyserie</label>
+        <label class="form-check-label" for="chk-totvagmatbyserie">Total vagas/matriculas por serie</label>
       </div>
       <div class="form-check mb-1">
         <input type="checkbox" class="form-check-input consulta-check" id="chk-turmaserieturno" value="turmaserieturno">
-        <label class="form-check-label" for="chk-turmaserieturno">turmaserieturno</label>
+        <label class="form-check-label" for="chk-turmaserieturno">Turma/Serie/Turno</label>
       </div>
     </div>
 
@@ -378,7 +383,14 @@
 <div id="toast" class="toast position-fixed bottom-0 end-0 m-3 p-2 rounded" style="display:none; color:white;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script src="script.js"></script>
+<script src="grid.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    Grid.init(); // target padrão: #grid-panel
+  });
+</script>
 
 <script>
 (function() {

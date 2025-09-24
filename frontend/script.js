@@ -1,9 +1,9 @@
 /* =====================================================================
-   script.js — refatorado
+   script.js — refatorado (modesc dinâmico)
    ✦ Mantém fluxo de token e gráficos
    ✦ Consolidado, sem gambiarras, sem fetch duplo
    ✦ Planilha fora do #results-panel (sem duplicação)
-   ✦ alunosserieturno fetch quando .consulta-check = "alunosserieturno"
+   ✦ fetch dinâmico quando .consulta-check define {modesc}
    ✦ Mode title = "Nome da UE — Código: xxx"
    ✦ Ao clicar Buscar, desmarca .consulta-check
    ✦ #mod-panel NUNCA dentro do #results-panel
@@ -72,23 +72,83 @@ function getState(){
   return {
     token: ($id("access_token")?.value || "").trim(),
     codesc: ($id("codigo-ue-label")?.textContent || "—").trim(),
-    tipobusca: ($id("mod-label")?.textContent || "—").trim(),
+    tipobusca: ($id("mod-label")?.textContent || "—").trim(), // <- {modesc}
     anyConsulta: !!document.querySelector(".consulta-check:checked")
   };
 }
 
 
+const GRID_HIDDEN_FIELDS = new Set(["dt_atualizacao","dtAtualizacao"]);
+
+
+function formatDateBR(s) {
+  if (!s) return "";
+  // pega "YYYY-MM-DD" (ou "YYYY-MM-DDTHH:MM:SS...")
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  // se já vier "dd/mm/aaaa" ou "dd-mm-aaaa", mantém
+  const m2 = String(s).match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})$/);
+  if (m2) return `${m2[1]}/${m2[2]}/${m2[3]}`;
+  // fallback: tenta Date
+  try {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const dd = String(d.getUTCDate()).padStart(2,"0");
+      const mm = String(d.getUTCMonth()+1).padStart(2,"0");
+      const yy = d.getUTCFullYear();
+      return `${dd}/${mm}/${yy}`;
+    }
+  } catch(_) {}
+  return s;
+}
+
+
+
+// pega token do input ou do localStorage (ultima atualizacao)
+function getApiToken() {
+  const fromInput = document.getElementById("access_token")?.value?.trim();
+  if (fromInput) return fromInput;
+  try { return localStorage.getItem("apilib_token") || null; } catch(_) { return null; }
+}
+
+// atualiza só a label do topo (não altera grid nem buscador)
+async function carregarUltimaAtualizacaoSimples() {
+  const label = document.getElementById("ultima-atualizacao");
+  if (!label) return;
+
+  const token = getApiToken();
+  if (!token) { label.textContent = "Última atualização: conecte-se para consultar"; return; }
+
+  label.textContent = "Última atualização: carregando...";
+  try {
+    const r = await fetch(
+      "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1/api/dtatualizacao/",
+      { headers: { "Authorization": "Bearer " + token, "Accept": "application/json" }, cache: "no-store" }
+    );
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const data = await r.json();
+    // aceita { dt_atualizacao: "..." } ou { results: [ { dt_atualizacao: "..." } ] }
+    const dt = data?.dt_atualizacao || data?.results?.[0]?.dt_atualizacao || null;
+    label.textContent = "Última atualização: " + (dt ? formatDateBR(dt) : "/");
+    // opcional: guardar p/ uso futuro
+    try { localStorage.setItem("SME.dt_atualizacao", dt || ""); } catch(_) {}
+  } catch (e) {
+    label.textContent = "Última atualização: indisponível";
+    console.warn("dtatualizacao falhou:", e);
+  }
+}
+
+
+
 /* ---- helper: título atual "Nome da UE — Código: XXX" ---- */
 function getUETitle() {
   const code = (document.getElementById("codigo-ue-label")?.textContent || "—").trim();
-  // tenta pegar o nome da UE do item selecionado nos resultados
   const sel = document.querySelector("#results .result-text.result-selected, #results .result-box.result-selected");
   if (sel) {
     const firstLine = (sel.innerText || "").split("\n").map(s => s.trim()).filter(Boolean)[0] || "";
     const nome = firstLine.replace(/^.*?:\s*/, "") || "—";
     return `${nome} — Código: ${code}`;
   }
-  // fallback: se não houver seleção, tenta deduzir pelo mode-title (se existir)
   const modeTitle = document.querySelector("#mode-panel .mode-title")?.textContent?.trim();
   if (modeTitle) return modeTitle;
   return `Nome da UE — Código: ${code}`;
@@ -106,30 +166,6 @@ function setModLabel(v){
   el.textContent = (v && v.trim()) ? v.trim() : "—";
 }
 
-/* --------- Título do mode-panel: Nome da UE — Código ---------- */
-function updateModePanelTitleFromSelected(){
-  const selected = $id("results")?.querySelector(".result-text.result-selected, .result-box.result-selected");
-  const modePanel = $id("mode-panel"); if (!modePanel) return;
-  let titleEl = modePanel.querySelector(".mode-title");
-  if (!titleEl) {
-    titleEl = document.createElement("div");
-    titleEl.className = "mode-title";
-    titleEl.style.fontWeight = "600";
-    titleEl.style.fontSize = "16px";
-    titleEl.style.marginBottom = "6px";
-    modePanel.prepend(titleEl);
-  }
-  let nome = "—", code = "—";
-  if (selected) {
-    const txt = selected.innerText || "";
-    const first = txt.split("\n").map(s=>s.trim()).filter(Boolean)[0] || "";
-    nome = first.replace(/^.*?:\s*/, "") || "—";
-    code = selected.dataset?.codesc || extractCodescFromText(txt) || "—";
-  } else {
-    code = ($id("codigo-ue-label")?.textContent||"—").trim();
-  }
-  titleEl.textContent = `${nome} — Código: ${code}`;
-}
 
 /* --------- Persistência de CK/CS ---------- */
 async function loadSavedKeys() {
@@ -148,66 +184,54 @@ async function loadSavedKeys() {
   } catch {}
 }
 
+/* --------- Planilha (fora do #results-panel) ---------- */
+const Grid = (()=> {
+  let created = false;
 
+  function ensure() {
+    if (created) return $id("grid-panel");
+    const anchor = $id("results-panel"); if (!anchor) return null;
 
+    const panel = document.createElement("div");
+    panel.id = "grid-panel";
+    panel.style.marginTop     = "12px";
+    panel.style.padding       = "8px";
+    panel.style.background    = "#fff";
+    panel.style.border        = "1px solid #e5e5e5";
+    panel.style.borderRadius  = "6px";
+    panel.style.boxSizing     = "border-box";
+    panel.style.display       = "flex";
+    panel.style.flexDirection = "column";
+    panel.hidden = true; // visível só com consulta-check marcada
 
-        /* --------- Planilha (fora do #results-panel) ---------- */
-        const Grid = (()=> {
-        let created = false;
+    panel.style.overflow = "auto"; // scrollbox no próprio grid-panel
 
+    panel.innerHTML = `
+      <div id="grid-header" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div id="grid-title" style="font-weight:700;">Planilha de resultados</div>
+        <button id="grid-download" class="btn btn-sm btn-outline-secondary" type="button">Baixar CSV</button>
+        <div id="grid-count" class="text-muted" style="margin-left:auto;font-size:12px;"></div>
+      </div>
+      <div id="grid-scroll"></div>
+    `;
 
-        function ensure() {
-        if (created) return $id("grid-panel");
-        const anchor = $id("results-panel"); if (!anchor) return null;
+    anchor.insertAdjacentElement("afterend", panel);
+    created = true;
+    syncSize();
+    return panel;
+  }
 
-        const panel = document.createElement("div");
-        panel.id = "grid-panel";
-        panel.style.marginTop     = "12px";
-        panel.style.padding       = "8px";
-        panel.style.background    = "#fff";
-        panel.style.border        = "1px solid #e5e5e5";
-        panel.style.borderRadius  = "6px";
-        panel.style.boxSizing     = "border-box";
-        panel.style.display       = "flex";
-        panel.style.flexDirection = "column";
-        panel.hidden = true; // visível só com consulta-check marcada
+  function syncSize(){
+    const rp = $id("results-panel");
+    const gp = $id("grid-panel");
+    if (!rp || !gp) return;
 
-        panel.style.overflow = "auto"; // scrollbox no próprio grid-panel
+    const w = rp.offsetWidth;
+    if (w) gp.style.width = w + "px";
 
-        panel.innerHTML = `
-        <div id="grid-header" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div id="grid-title" style="font-weight:700;">Planilha de resultados</div>
-            <button id="grid-download" class="btn btn-sm btn-outline-secondary" type="button">Baixar CSV</button>
-            <div id="grid-count" class="text-muted" style="margin-left:auto;font-size:12px;"></div>
-        </div>
-        <div id="grid-scroll"></div>
-        `;
-
-        anchor.insertAdjacentElement("afterend", panel);
-
-        created = true;
-        syncSize(); // ajusta altura inicialmente
-        return panel;
-        }
-
-
-
-
-        function syncSize(){
-        const rp = $id("results-panel");
-        const gp = $id("grid-panel");
-        if (!rp || !gp) return;
-
-        const w = rp.offsetWidth;
-        if (w) gp.style.width = w + "px";
-
-        const h = rp.offsetHeight;
-        // altura máxima do grid-panel segue a do results-panel
-        if (h) gp.style.maxHeight = Math.max(220, h) + "px";
-        }
-
-
-
+    const h = rp.offsetHeight;
+    if (h) gp.style.maxHeight = Math.max(220, h) + "px";
+  }
 
   function toCSV(rows, headers){
     const esc = (v) => {
@@ -247,7 +271,7 @@ async function loadSavedKeys() {
       return;
     }
 
-    // colunas
+    // colunas (especial para alunosserieturno; genérico caso contrário)
     let keys;
     if (rows[0] && ("descserie" in rows[0] || "turno" in rows[0] || "total_alunos" in rows[0])) {
       const base=["descserie","turno","total_alunos"];
@@ -259,13 +283,12 @@ async function loadSavedKeys() {
     }
     const headers = keys.map(k=>({key:k, label:(window.fieldLabels?.[k]||k)}));
 
-    // tabela
     const table=document.createElement("table");
     table.className="table table-sm table-bordered table-striped";
     table.style.margin="0";
     table.style.display   = "block";
     table.style.boxSizing = "border-box";
-    table.style.width     = "calc(100% - 10px)"; // 10px mais estreita
+    table.style.width     = "calc(100% - 10px)";
 
     const thead=document.createElement("thead");
     thead.style.position="sticky"; thead.style.top="0"; thead.style.zIndex="1";
@@ -274,6 +297,7 @@ async function loadSavedKeys() {
     headers.forEach(h=>{ const th=document.createElement("th"); th.textContent=h.label; th.style.whiteSpace="nowrap"; thr.appendChild(th);});
     thead.appendChild(thr);
     table.appendChild(thead);
+
     const tbody=document.createElement("tbody");
     rows.forEach(r=>{
       const tr=document.createElement("tr");
@@ -286,12 +310,20 @@ async function loadSavedKeys() {
       });
       tbody.appendChild(tr);
     });
+        // ... você cria THEAD, TBODY, etc ...
     table.appendChild(tbody);
     box.appendChild(table);
 
+    // >>> CONEXÃO COM grid.js: esconder colunas e auto-ajustar
+    if (window.Grid?.applyTo) {
+      Grid.applyTo(table);          // aplica no <table> recém-criado
+      // ou: Grid.applyTo("#grid-scroll"); // se preferir apontar para o container
+    }
+
+
+
     if (btnDL) btnDL.onclick=()=>downloadCSV(opts.filename||"planilha-resultados", toCSV(rows,headers));
 
-    // garante que nenhuma tabela fique dentro de results/mode
     purgeTablesInsidePanels();
   }
   function purgeTablesInsidePanels(){
@@ -300,7 +332,6 @@ async function loadSavedKeys() {
   }
   return { ensure, render, syncSize, purgeTablesInsidePanels };
 })();
-
 
 /* --------- Fetch bus (um único hook) ---------- */
 const FetchBus = (()=> {
@@ -314,44 +345,48 @@ const FetchBus = (()=> {
       const clone = res.clone();
       const data  = await clone.json().catch(()=>null);
       listeners.forEach(fn => fn({url, meth, data, res}));
-    } catch {} // silencioso
+    } catch {}
     return res;
   };
   function on(fn){ listeners.push(fn); }
   return { on };
 })();
 
-/* --------- Regras de pós-fetch (planilha fora) ---------- */
+/* --------- Regras de pós-fetch (planilha fora, modo dinâmico) ---------- */
 FetchBus.on(({url, meth, data})=>{
   // /api/schools → planilha de escolas fora
   if (url.includes("/api/schools") && meth==="POST") {
     const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []);
     if (items.length) Grid.render(items, { title:"Planilha de escolas", filename:"escolas" });
   }
-if (/\/sme\/EscolaAberta\/v1\/api\/alunosserieturno\//i.test(url) && meth==="GET") {
-  const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
-  if (items.length) {
-    Grid.render(items, { title: getUETitle(), filename: "alunosserieturno" });
+
+  // Qualquer GET direto ao gateway da EscolaAberta para /api/{modesc}/{codesc}
+  if (/\/sme\/EscolaAberta\/v1\/api\//i.test(url) && meth==="GET") {
+    const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data) ? data : []);
+    if (items.length) {
+      const modeNow = (getState().tipobusca || "").toLowerCase();
+      Grid.render(items, { title: getUETitle(), filename: modeNow || "consulta" });
+    }
   }
-}
 });
 
-/* --------- Busca alunosserieturno no clique do checkbox correspondente ---------- */
-async function fetchAlunosSerieTurnoIfNeeded(){
+/* --------- Busca DINÂMICA do modo selecionado ({modesc}) ---------- */
+async function fetchModeIfNeeded(){
   const { tipobusca, codesc, token } = getState();
-  if (!tipobusca || tipobusca.toLowerCase() !== "alunosserieturno") return;
+  const mode = (tipobusca||"").trim();
+  if (!mode || mode==="—") return;
   if (!codesc || codesc==="—" || !token) return;
 
-  // exibe o mode-panel (sem borda especial)
-  const mode = $id("mode-panel");
-  if (mode) mode.hidden = false;
+  // mostra o mode-panel
+  const modePanel = $id("mode-panel");
+  if (modePanel) modePanel.hidden = false;
 
   const box = $id("mode-scroll");
   if (box) box.innerHTML = "<div class='p-2 small text-muted'>Carregando…</div>";
 
   const base = "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1/api";
-  const url1 = `${base}/${encodeURIComponent(tipobusca)}/${encodeURIComponent(codesc)}/`;
-  const url2 = `${base}/${encodeURIComponent(tipobusca)}/${encodeURIComponent(codesc)}`;
+  const url1 = `${base}/${encodeURIComponent(mode)}/${encodeURIComponent(codesc)}/`;
+  const url2 = `${base}/${encodeURIComponent(mode)}/${encodeURIComponent(codesc)}`;
 
   async function doFetch(u){
     const resp = await fetch(u, {
@@ -369,12 +404,81 @@ async function fetchAlunosSerieTurnoIfNeeded(){
       if (box) box.innerHTML = `<div class='p-2 text-danger'>Erro ${r.status}: ${txt || "Falha na consulta"}</div>`;
       return;
     }
-    // OBS: a planilha aparecerá FORA via FetchBus; aqui só limpamos o mode
+    // A planilha aparece FORA via FetchBus; aqui só limpamos o mode
     if (box) box.innerHTML = "";
   } catch {
     if (box) box.innerHTML = "<div class='p-2 text-danger'>Erro de rede na consulta.</div>";
   }
 }
+
+
+
+/* ==== APPEND-ONLY: dispara a busca quando o label "Código da UE" mudar ==== */
+(function () {
+  function byId(id){ return document.getElementById(id); }
+
+  function fireActiveConsulta() {
+    const active = document.querySelector('.consulta-check:checked');
+    if (!active) return;
+    setModLabel(active.value || "—");
+    fetchModeIfNeeded();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const lbl = byId('codigo-ue-label');
+    if (!lbl || !window.MutationObserver) return;
+
+    let last = (lbl.textContent || '').trim();
+
+    const obs = new MutationObserver(() => {
+      const current = (lbl.textContent || '').trim();
+      if (current === last) return;
+      last = current;
+      setTimeout(fireActiveConsulta, 0);
+    });
+
+    obs.observe(lbl, { childList: true, characterData: true, subtree: true });
+
+    // chamada logo que a página carregar
+    updateUltimaAtualizacaoLabel();
+  });
+})();
+
+
+
+
+
+/* ==== APPEND-ONLY: dispara a busca quando o label "Código da UE" mudar ==== */
+(function () {
+  function byId(id){ return document.getElementById(id); }
+
+  function fireActiveConsulta() {
+    const active = document.querySelector('.consulta-check:checked');
+    if (!active) return;
+    setModLabel(active.value || "—");
+    fetchModeIfNeeded();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const lbl = byId('codigo-ue-label');
+    if (!lbl || !window.MutationObserver) return;
+
+    let last = (lbl.textContent || '').trim();
+
+    const obs = new MutationObserver(() => {
+      const current = (lbl.textContent || '').trim();
+      if (current === last) return;
+      last = current;
+      setTimeout(fireActiveConsulta, 0);
+    });
+
+    obs.observe(lbl, { childList: true, characterData: true, subtree: true });
+
+    // CHAMA AQUI: logo que a página carrega, já consulta a última atualização
+    updateUltimaAtualizacaoLabel();
+  });
+})();
+
 
 /* --------- Montagem e eventos ---------- */
 document.addEventListener("DOMContentLoaded", () => {
@@ -397,9 +501,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // carrega CK/CS salvos
   loadSavedKeys();
 
+
+
   // conectar/token
-  btnConnect?.addEventListener("click", async ()=>{
-    const ck = $id("consumer_key")?.value.trim();
+  //btnConnect?.addEventListener("click", async ()=>{
+  /*  const ck = $id("consumer_key")?.value.trim();
     const cs = $id("consumer_secret")?.value.trim();
     if (!ck || !cs) { toast("Preencha consumer key e segredo","error"); return; }
     try {
@@ -413,6 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const acc = $id("access_token");
         acc.value = data.access_token;
         acc.setAttribute("readonly", true);
+
         btnConnect.textContent = "Conectado";
         btnConnect.classList.add("connected");
         toast("Conexão bem-sucedida","success");
@@ -420,10 +527,47 @@ document.addEventListener("DOMContentLoaded", () => {
         toast("Erro: "+(data.error||"Token não retornado"),"error");
       }
     } catch(e){ toast("Erro de conexão: "+e.message,"error"); }
-  });
+  }); */
+
+
+
+// conectar/token
+btnConnect?.addEventListener("click", async ()=>{
+  const ck = $id("consumer_key")?.value.trim();
+  const cs = $id("consumer_secret")?.value.trim();
+  if (!ck || !cs) { toast("Preencha consumer key e segredo","error"); return; }
+  try {
+    const r = await fetch("/api/connect",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ consumer_key:ck, consumer_secret:cs, base_url: "https://gateway.apilib.prefeitura.sp.gov.br/token" })
+    });
+    const data = await r.json();
+    if (data.access_token){
+      const acc = $id("access_token");
+      acc.value = data.access_token;
+      acc.setAttribute("readonly", true);
+      btnConnect.textContent = "Conectado";
+      btnConnect.classList.add("connected");
+      toast("Conexão bem-sucedida","success");
+
+      // após sucesso do connect:
+      window.apiToken = data.access_token;
+      try { localStorage.setItem("apilib_token", data.access_token); } catch(_) {}
+      carregarUltimaAtualizacaoSimples();   // << só atualiza o topo
+
+    } else {
+      toast("Erro: "+(data.error||"Token não retornado"),"error");
+    }
+  } catch(e){ toast("Erro de conexão: "+e.message,"error"); }
+});
+
+
+
+
 
   // busca antiga (opcional)
-  btnSearch?.addEventListener("click", async ()=>{
+  /*btnSearch?.addEventListener("click", async ()=>{
     const token=($id("access_token")?.value||"").trim();
     const name =$id("school_name")?.value.trim();
     if (!token || !name) { toast("Preencha token e nome da escola","error"); return; }
@@ -433,6 +577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body:JSON.stringify({ token, base_url:"http://localhost:5000", name })
       });
       const data = await r.json();
+
       resultsDiv.innerHTML = "";
       const matches = data.matches || (data.match?[data.match]:[]);
       if (matches.length){
@@ -463,7 +608,11 @@ document.addEventListener("DOMContentLoaded", () => {
         resultsPanel && (resultsPanel.hidden=false);
       }
     } catch(e){ toast("Erro na busca: "+e.message,"error"); }
+
+
   });
+*/
+
 
   // limpar busca antiga
   btnClearSearch?.addEventListener("click", ()=>{
@@ -472,7 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setCodigoUeLabel("—"); updateModePanelTitleFromSelected();
   });
 
-  // busca com filtros
+  // busca com filtros (lista de escolas)
   btnSearchSchools?.addEventListener("click", async ()=>{
     const token=($id("access_token")?.value||"").trim();
     if (!token){ toast("Preencha o token de acesso","error"); return; }
@@ -491,7 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method:"POST", headers:{ "Content-Type":"application/json" },
         body:JSON.stringify(payload)
       });
-      const data=await r.json();
+      const data=await r.json(); 
       resultsDiv.innerHTML=""; resultsDiv.classList.remove("overflowing");
       if (data.error){ toast(data.error,"error"); resultsPanel&&(resultsPanel.hidden=false); return; }
       const items = Array.isArray(data.results) ? data.results : [];
@@ -679,15 +828,15 @@ document.addEventListener("DOMContentLoaded", () => {
     updateModePanelTitleFromSelected();
   }, true);
 
-  // “Itens a consultar”: exclusivos e set do mod-label
+  // “Itens a consultar”: exclusivos; define {modesc} e dispara busca dinâmica
   document.addEventListener("change",(e)=>{
     const chk = e.target;
     if (!chk.matches?.(".consulta-check")) return;
     // apenas um por vez
     $$(".consulta-check").forEach(o=>{ if (o!==chk) o.checked=false; });
     setModLabel(chk.checked ? chk.value : "—");
-    // se for alunosserieturno, dispara fetch
-    fetchAlunosSerieTurnoIfNeeded();
+    // dispara a consulta do modo atual
+    fetchModeIfNeeded();
     // grid visível/oculto conforme marcado
     const gp = Grid.ensure(); if (gp) gp.hidden = !getState().anyConsulta;
   }, true);
@@ -696,7 +845,6 @@ document.addEventListener("DOMContentLoaded", () => {
   (function ensureModeOutside(){
     const results = $id("results-panel"); const mod = $id("mod-panel");
     if (results && mod && results.contains(mod)) results.insertAdjacentElement("afterend", mod);
-    // remove borda verde do mod-panel (se houver CSS herdado antigo)
     if (mod){ mod.style.border="none"; mod.style.background="#fff"; }
   })();
 
@@ -708,30 +856,18 @@ document.addEventListener("DOMContentLoaded", () => {
   Grid.syncSize();
   updateModePanelTitleFromSelected();
   window.addEventListener("resize", Grid.syncSize);
-  });
-
-
-
+});
 
 /* ==== APPEND-ONLY: dispara a busca quando o label "Código da UE" mudar ==== */
 (function () {
   function byId(id){ return document.getElementById(id); }
 
-  // Dispara a mesma rotina de quando o usuário marca um .consulta-check
   function fireActiveConsulta() {
     const active = document.querySelector('.consulta-check:checked');
-    if (!active) return; // se nada estiver selecionado, não há o que consultar
-
-    // dispara o 'change' no checkbox ativo (bubbles igual ao do usuário)
-    active.dispatchEvent(new Event('change', { bubbles: true }));
-
-    // reforços: se você tiver helpers expostos, tenta atualizar os painéis também
-    if (window.__modePanel && typeof window.__modePanel.fetchModePanel === 'function') {
-      try { window.__modePanel.fetchModePanel(); } catch {}
-    }
-    if (window.__gridPanel && typeof window.__gridPanel.ensure === 'function') {
-      try { window.__gridPanel.ensure(); } catch {}
-    }
+    if (!active) return;
+    // atualiza o label do modo (por segurança) e dispara a busca dinâmica
+    setModLabel(active.value || "—");
+    fetchModeIfNeeded();
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -742,16 +878,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const obs = new MutationObserver(() => {
       const current = (lbl.textContent || '').trim();
-      if (current === last) return;     // evita disparo duplo sem mudança real
+      if (current === last) return;
       last = current;
-
-      // aguarda um tick para outros patches atualizarem estados/labels
       setTimeout(fireActiveConsulta, 0);
     });
 
-    // observa qualquer mudança de texto/filhos no label do topo
     obs.observe(lbl, { childList: true, characterData: true, subtree: true });
   });
 })();
-
-
