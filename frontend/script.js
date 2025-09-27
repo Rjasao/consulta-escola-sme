@@ -885,4 +885,37 @@ btnConnect?.addEventListener("click", async ()=>{
 
     obs.observe(lbl, { childList: true, characterData: true, subtree: true });
   });
+  
+})();
+
+(function () {
+  function normalize(t){ return (t||"").replace(/\s+/g," ").trim().toLowerCase(); }
+
+  function tagCsvButton(root=document) {
+    const candidates = root.querySelectorAll('button, a.btn, .btn');
+    for (const el of candidates) {
+      const txt = normalize(el.textContent);
+      if (txt === 'baixar csv' || txt.includes('baixar csv')) {
+        el.classList.add('download-csv-btn');
+      }
+    }
+  }
+
+  // 1) na carga inicial
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => tagCsvButton());
+  } else {
+    tagCsvButton();
+  }
+
+  // 2) observa o grid pois alguns botões são renderizados depois
+  const gridPanel = document.getElementById('grid-panel') || document.body;
+  if (window.MutationObserver && gridPanel) {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        if (m.addedNodes && m.addedNodes.length) tagCsvButton(gridPanel);
+      }
+    });
+    obs.observe(gridPanel, { childList: true, subtree: true });
+  }
 })();

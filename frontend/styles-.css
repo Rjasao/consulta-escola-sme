@@ -235,120 +235,20 @@ button.copy-btn {
   border-color: #99cc99 !important;
 }
 
-
-
-/* === FIX: 'Apagar' no offcanvas direito não quebra e dimensiona ao texto === */
-#connectSidebar .input-group {
-  display: flex;
-  align-items: stretch;
-  flex-wrap: nowrap;             /* impede quebra de linha */
+/* ====== TOPO RESPONSIVO ====== */
+.topbar .navbar-brand {
+  font-size: 18px;
+  text-align: center;
+  flex: 1;
 }
 
-#connectSidebar .input-group input {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-#connectSidebar .input-group .clear-btn {
-  flex: 0 0 auto;                /* não encolhe */
-  width: auto !important;        /* ignora width:100% global do mobile */
-  inline-size: fit-content;      /* dimensiona ao conteúdo (largura do texto) */
-  white-space: nowrap;           /* não quebra dentro do botão */
-  margin-bottom: 0 !important;   /* evita empurrar para baixo */
-  padding: 6px 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-@media (max-width: 480px){
-  #connectSidebar .input-group .clear-btn {
-    padding: 6px 10px;
-    font-size: 14px;
+@media (max-width: 480px) {
+  .topbar .navbar-brand {
+    font-size: 16px;
   }
-}
-
-/* (já aplicado antes) — mantém hambúrgueres nas extremidades sem quebrar */
-.navbar .container-fluid { display:flex; align-items:center; justify-content:space-between; }
-.navbar .navbar-brand { flex:1 1 auto; text-align:center; white-space:nowrap; }
-@media (max-width: 768px){
-  .navbar .navbar-toggler {
-    width: auto;
-    margin-bottom: 0;
-    flex: 0 0 auto;
+  .topbar .navbar-toggler {
     padding: 4px 8px;
   }
 }
-@media (max-width: 480px){
-  .navbar .navbar-brand { font-size: 16px; padding: 0 4px; }
-}
-
-
-/* === 1. Botão "Apagar busca" sem quebra e com largura do texto === */
-#btn-clear-all {
-  width: auto !important;
-  inline-size: fit-content;
-  white-space: nowrap;
-  flex: 0 0 auto;
-  padding: 8px 14px;
-}
-
-@media (max-width: 480px) {
-  #btn-clear-all {
-    font-size: 14px;
-    padding: 6px 12px;
-  }
-}
-
-/* === 2. Botões "Copia" e "Copia End." nos resultados === */
-.copy-btn {
-  width: auto !important;
-  inline-size: fit-content;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 12px;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-@media (max-width: 480px) {
-  .copy-btn {
-    font-size: 14px;
-    padding: 6px 10px;
-  }
-}
-
-/* Garante que os botões de copiar fiquem lado a lado e nunca quebrem */
-.result-box .copy-btn,
-#results .copy-btn {
-  flex: 0 0 auto;
-  display: inline-block;
-}
-
-
-/* Botão "Baixar CSV" — sem quebra e ajustado ao texto */
-.download-csv-btn {
-  width: auto !important;
-  inline-size: fit-content;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  padding: 6px 14px;
-  font-size: 14px;
-  margin-top: 4px;
-}
-@media (max-width: 480px){
-  .download-csv-btn {
-    font-size: 14px;
-    padding: 6px 10px;
-  }
-}
-
 
 /* final */

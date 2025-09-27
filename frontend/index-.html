@@ -20,14 +20,16 @@
 <body>
 
 <!-- Barra superior com dois menus hambúrguer -->
-<nav class="navbar navbar-light bg-light mb-3">
-  <div class="container-fluid">
+<nav class="navbar navbar-light bg-light mb-3 topbar">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+    
     <!-- Hamburguer ESQUERDO: Filtros -->
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Abrir filtros">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <span class="navbar-brand mb-0 h4 ms-2">Consulta EscolaAberta - SP</span>
+    <!-- Título central -->
+    <span class="navbar-brand mb-0 h4 text-center flex-grow-1">Consulta EscolaAberta - SP</span>
 
     <!-- Hamburguer DIREITO: Conectar -->
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#connectSidebar" aria-controls="connectSidebar" aria-label="Abrir conectar">
@@ -43,6 +45,7 @@
     <label for="search" class="form-label">Nome da Escola <span class="ms-3" id="codigo-ue-wrap"><strong>Código da UE:</strong> <span id="codigo-ue-label">—</span> <strong class="ms-3">Mod:</strong> <span id="mod-label">—</span></span></label>
     <div class="input-group">
       <input type="text" id="search" class="form-control" placeholder="Nome da Escola">
+      <button class="clear-btn btn btn-sm btn-outline-secondary" data-target="search">Apagar</button>
     </div>
   </div>
 
