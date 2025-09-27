@@ -1,9 +1,6 @@
 /* inicio */
 /* style.css - estilos para frontend EscolaAberta */
 
-
-
-
 /* Reset e ajustes gerais */
 body {
     font-family: Arial, sans-serif;
@@ -13,20 +10,17 @@ body {
     color: #333;
 }
 
-
 /* .container {
     max-width: 960px;
     margin: 20px auto;
     padding: 15px;
 }*/
 
-
 .container {
     max-width: 960px;
     margin: 20px 0;   /* remove o 'auto' que centraliza */
     padding: 15px;
 }
-
 
 /* Boxes de input e token */
 .input-box {
@@ -177,9 +171,6 @@ button.copy-btn {
     }
 }
 
-
-
-
 @media (max-width: 480px) {
   .toast { left: 8px; right: 8px; bottom: 8px; min-width: auto; max-width: none; }
     .copy-icon {
@@ -234,8 +225,6 @@ button.copy-btn {
   background-color: #ccffcc !important;
   border-color: #99cc99 !important;
 }
-
-
 
 /* === FIX: 'Apagar' no offcanvas direito não quebra e dimensiona ao texto === */
 #connectSidebar .input-group {
@@ -349,6 +338,5 @@ button.copy-btn {
     padding: 6px 10px;
   }
 }
-
 
 /* final */
