@@ -339,4 +339,15 @@ button.copy-btn {
   }
 }
 
+
+/* === OCULTA COMPLETAMENTE o bloco Código da UE e Mod === */
+#codigo-ue-wrap {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+}
+
 /* final */

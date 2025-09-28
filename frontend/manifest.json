@@ -1,0 +1,31 @@
+{
+  "name": "SME Consulta",
+  "short_name": "SME",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1E4E8C",
+  "theme_color": "#1E4E8C",
+  
+  "icons": [
+  {
+    "src": "favicon-16x16.png",
+    "sizes": "16x16",
+    "type": "image/png"
+  },
+  {
+    "src": "favicon-32x32.png",
+    "sizes": "32x32",
+    "type": "image/png"
+  },
+  {
+    "src": "favicon-48x48.png",
+    "sizes": "48x48",
+    "type": "image/png"
+  },
+  {
+    "src": "favicon.ico",
+    "sizes": "48x48 32x32 16x16",
+    "type": "image/x-icon"
+  }  
+]
+}

@@ -6,6 +6,12 @@
 <title>Consulta EscolaAberta SP</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<!-- Favicon institucional SME -->
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="manifest" href="manifest.json">
+
 <style>
   .navbar-toggler { border: none; }
   .navbar-toggler:focus { box-shadow: none; }
@@ -40,7 +46,14 @@
 
   <!-- Campo fixo de busca por Nome da Escola -->
   <div class="mb-2">
-    <label for="search" class="form-label">Nome da Escola <span class="ms-3" id="codigo-ue-wrap"><strong>Código da UE:</strong> <span id="codigo-ue-label">—</span> <strong class="ms-3">Mod:</strong> <span id="mod-label">—</span></span></label>
+    <label for="search" class="form-label"> <!--Nome da Escola -->
+      
+      <span class="ms-3" id="codigo-ue-wrap">
+        <strong>Código da UE:</strong> <span id="codigo-ue-label">—</span>
+         <strong class="ms-3">Mod:</strong> <span id="mod-label">—</span>
+        </span>
+
+      </label>
     <div class="input-group">
       <input type="text" id="search" class="form-control" placeholder="Nome da Escola">
     </div>
@@ -416,6 +429,13 @@
   }
 })();
 
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("✅ Service Worker registrado!"))
+    .catch(err => console.log("❌ Erro ao registrar:", err));
+}
 </script>
 
 </body>
