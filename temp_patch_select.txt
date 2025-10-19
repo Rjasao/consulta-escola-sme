@@ -1,0 +1,72 @@
+*** Begin Patch
+*** Update File: frontend\pesquisaue.js
+@@
+-function select(i){
+-  const it = items[i]; if (!it) return;
+-
+-  // monta a linha que vai no cartao/label
+-  const txt = (it.fullLine || ${(it.tipoesc||"").trim()}  - )
+-    .replace(/\s+/g," ").trim();
+-  const schoolData = {
+-    nomesc: (it.nomesc || "").trim(),
+-    nome: (it.nomesc || "").trim(),
+-    endereco: (it.endereco || "").trim(),
+-    tipoesc: (it.tipoesc || "").trim(),
+-    dre: (it.dre || "").trim(),
+-    codesc: (it.codesc || "").trim()
+-  };
+-
+-  // coloca no input e fecha dropdown
+-  input.value = txt;
+-  dd.hidden = true;
+-  active = -1;
+-
+-  // === NOVA REGRA DAS LABELS (esquerda) ===
+-  if (sel){
+-    sel.hidden = false;
+-
+-    // pega todos os cartoes atuais
+-    const cards = Array.from(sel.querySelectorAll(".pu-card"));
+-    const firstNonActive = cards.find(c => !c.classList.contains("active"));
+-    const allSelected    = cards.length > 0 && cards.every(c => c.classList.contains("active"));
+-    const MAX = 4;
+-
+-    if (firstNonActive){
+-      // 1) existe pelo menos uma label nao selecionada ? substituir esta
+-      updateCardText(firstNonActive, txt, schoolData);
+-      // (mantem o estado visual da label substituida  continua nao ativa)
+-    } else if (allSelected || cards.length === 0){
+-      // 2) so acrescenta nova label se NAO ha nenhuma ou se TODAS estiverem ativas
+-      if (cards.length >= MAX){
+-        // limite atingido
+-        if (typeof toast === "function") {
+-          toast("Limite de 4 escolas atingido.", "warn");
+-        } else {
+-          console.warn("Limite de 4 escolas atingido.");
+-        }
+-      } else {
+-        sel.appendChild(createCard(txt, schoolData));
+-      }
+-    } else {
+-      // 3) fallback raro: tem cartoes e nenhum e nao-ativo, mas tambem nao sao "todos ativos"
+-      // (nao deve acontecer). Por seguranca, substitui o primeiro.
+-      if (cards[0]) updateCardText(cards[0], txt, schoolData);
+-    }
+-  }
+-
+-  // spans legadas (se existirem)
+-  if (elTipo) elTipo.textContent = it.tipoesc || "";
+-  if (elNome) elNome.textContent = it.nomesc  || "";
+-  if (elCod)  elCod.textContent  = it.codesc  || "";
+-  if (elDre)  elDre.textContent  = it.dre     || "";
+-}
++function select(i){
++  const mapped = items[i]; if (!mapped) return;
++
++  input.value = mapped.title || mapped.cardText || "";
++  dd.hidden = true;
++  active = -1;
++
++  addSchoolCard(mapped);
++}
+*** End Patch
