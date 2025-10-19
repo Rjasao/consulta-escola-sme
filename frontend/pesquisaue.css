@@ -1,0 +1,326 @@
+
+/* pesquisaue.css — Abas e dropdown isolados */
+.simple-tabs { 
+  display:flex; 
+  gap:6px; 
+  padding:6px 12px; 
+  background:#f0f4ff; 
+  border-bottom:2px solid #dbeafe; 
+}
+
+.simple-tab { 
+  border:none; 
+  background:#e0e7ff; 
+  padding:8px 12px; 
+  border-radius:8px; 
+  font-weight:600; 
+  cursor:pointer; 
+}
+
+.simple-tab.active { 
+  background:#1e40af; 
+  color:#fff; 
+}
+
+.simple-tab:focus { 
+  outline:none; 
+}
+
+/* Dropdown */
+.pu-autocomplete-wrapper { 
+  position: relative; 
+}
+
+.pu-dropdown {
+  position: absolute; 
+  top:100%; 
+  left:0; 
+  right:0;
+  z-index: 3000;
+  background:#fff; 
+  border:1px solid #ddd; 
+  border-top:none;
+  max-height: 300px; 
+  overflow-y:auto; 
+  border-radius:0 0 8px 8px;
+  box-shadow: 0 12px 30px -12px rgba(15,23,42,0.25);
+}
+
+.pu-dd-item { 
+  padding:8px 12px; 
+  cursor:pointer; 
+  display:flex; 
+  flex-direction:column; 
+  gap:2px; 
+  border-top:1px solid #f2f2f2; 
+}
+
+.pu-dd-item:first-child{ 
+  border-top:none; 
+}
+
+.pu-dd-item:hover, .pu-dd-item.active { 
+  background:#eef6ff; 
+}
+
+.pu-dd-item.disabled{ 
+  color:#94a3b8; 
+  cursor:default; 
+}
+
+.pu-dd-item.loading{ 
+  font-style:italic; 
+}
+
+.pu-main { 
+  font-weight:700; 
+}
+
+.pu-sub { 
+  font-size:12px; 
+  color:#475569; 
+}
+
+/* Estado selecionado (laranja): contorno escuro + fundo claro */
+.pesquisa-float .pu-user-tag.active{
+  border-color:#c2410c !important;          /* laranja escuro */
+  background:#ffedd5 !important;            /* laranja claro */
+  box-shadow:0 0 0 3px rgba(194,65,12,.15) !important;
+}
+
+/* Container do chip */
+.pesquisa-float .pu-user-tag{
+  position: relative;
+  display:inline-flex; 
+  align-items:flex-start; 
+  gap:6px;
+  padding:10px 36px 10px 12px;  /* espaço à direita pro X */
+  border:2px solid #e5e7eb; 
+  border-radius:10px;
+  background:#ffffff; 
+  color:#111827; 
+  cursor:pointer;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+/* === FORÇA o círculo vermelho no "X" (vence a regra mais específica) === */
+.pu-user-tag .pu-user-close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #dc3545;
+  color: #dc3545;
+  background: transparent;
+  line-height: 18px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.pu-user-tag .pu-user-close:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+#pu-user-hint { margin-bottom: 6px; }
+#pu-user-tags { margin-top: 2px; }
+
+.pu-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+
+.pu-card.active {
+  border-color: #198754;
+  background: #e8f5eb;
+}
+
+.pu-card-text {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.pu-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pu-card-move {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #6b7280;
+  background: #ffffff;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+.pu-card-move:hover {
+  background: #6b7280;
+  color: #ffffff;
+}
+
+#pesquisaue-panel .pu-card-close{
+  flex:0 0 auto;
+  background:transparent;
+  cursor:pointer;
+  width:21px;
+  height:21px;
+  border-radius:50%;
+  border:2px solid #166534;
+  color:#166534;
+  
+  
+  
+  padding:0;
+  
+  
+  font-weight:600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 0; /* hide native text; we'll draw via ::before */
+  line-height: 1;
+}
+#pesquisaue-panel .pu-card-close svg,
+#pesquisaue-panel .pu-card-close img,
+#pesquisaue-panel .pu-card-close .icon{
+  display: none !important;
+}
+
+#pesquisaue-panel .pu-card-close:hover{
+  background:#e6f4ea;
+  color:#14532d;
+  border-color:#14532d;
+}
+
+
+
+#pesquisaue-panel .pu-row-inline{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  width:100%;
+}
+#pesquisaue-panel .pu-row-inline .pu-autocomplete-wrapper-js{
+  flex:1 1 auto;
+  min-width:280px;
+  order:1;
+  position:relative;
+}
+#pesquisaue-panel .pu-row-inline #pu-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  white-space:nowrap;
+  order:2;
+}
+
+@media (max-width:640px){
+    #pesquisaue-panel .pu-row-inline{ 
+    flex-direction:column; align-items:stretch; 
+  }
+
+    #pesquisaue-panel .pu-row-inline #pu-actions{ 
+    order:0; 
+    justify-content:flex-start; 
+  }
+
+    #pesquisaue-panel .pu-row-inline .pu-autocomplete-wrapper-js{ 
+    order:1; 
+    min-width:0;
+  }
+}
+
+#pesquisaue-panel .pu-card{
+  padding:8px 10px;
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  margin-top:8px;
+  background:#fff;
+  cursor:pointer;
+  user-select:none;
+  transition:background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+#pesquisaue-panel .pu-card.active{
+  background:#e8f7ee;
+  border-color:#34a853;
+  box-shadow:0 0 0 2px rgba(52,168,83,.15);
+}
+
+#pesquisaue-panel .pu-card-text{
+  flex:1 1 auto;
+  padding-right:8px;
+  word-break:break-word;
+}
+
+#pesquisaue-panel .pu-card-actions{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex:0 0 auto;
+}
+
+#pesquisaue-panel .pu-card-move{
+  background:transparent;
+  border:1px solid #e5e7eb;
+  border-radius:6px;
+  cursor:pointer;
+  padding:2px 6px;
+  line-height:1;
+  font-size:14px;
+  color:#374151;
+}
+
+
+#pesquisaue-panel .pu-card-move:hover{ background:#f3f4f6; }
+
+#pesquisaue-panel .pu-card-close::before{
+  content: "×" !important;
+  display: block;
+  font-size: 16px;   /* ajuste aqui */
+  font-weight: 700;
+  line-height: 1;
+  color: #166534;
+  transform: translateY(-0.5px); /* micro ajuste vertical */
+}
+
+#pesquisaue-panel .pu-card-close:hover{
+  background: #16653410;
+  border-color: #166534;
+}
+
+#pesquisaue-panel .pu-card-close:hover::before{
+  color: #0b3a1b;
+}
+
+#pesquisaue-panel .pu-card-close::after{ content:none !important; }
+

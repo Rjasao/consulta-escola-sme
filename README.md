@@ -1,136 +1,128 @@
-inicio - README.txt
-Projeto: Consulta EscolaAberta SP
+# Consulta EscolaAberta SP
 
-Projeto: Consulta de escolas municipais de São Paulo via API EscolaAberta.
+Aplicação full-stack para consulta de escolas municipais de São Paulo utilizando a API Escola Aberta. O backend em Flask gerencia autenticação OAuth2 e requisições REST, enquanto o frontend em HTML/CSS/JS apresenta as informações de forma responsiva.
 
-Permite buscar escolas pelo nome (com erros de digitação) e exibir informações como endereço, número e DRE, utilizando backend em Python (Flask) e frontend em HTML/JS/CSS.
+## Estrutura
 
-1. Estrutura de Pastas
-
+```
 consulta-escola-sme/
-│
 ├── backend/
-│       └──__pycache__/
-│       └── venv/         ← ambiente virtual (não versionar no Git)
-│   ├── .env              # arquivo real usado pelo backend (não subir para Git)
-│   ├── .env.example      # Exemplo de variáveis de ambiente
-│   ├── add.py            # Servidor Flask principal
-│   ├── api_client.py     # Cliente para API EscolaAberta
-│   ├── config.py         # Configurações e variáveis de ambiente
-│   ├── README_BACKEND.md       ← documentação específica do backend (opcional)
-│   ├── requirements.txt       ← lista de dependências Python (opcional, mas recomendada)
-│   ├── server_control.py     # NOVO: controla start/stop do add.py e verifica Plesk
-│   └── utils.py          # Funções de normalização e fuzzy match
-│   
+│   ├── add.py               # servidor Flask principal
+│   ├── api_client.py        # cliente HTTP da API EscolaAberta
+│   ├── adm_routes.py        # rotas administrativas (CRUD em usuario.json)
+│   ├── config.py            # carregamento de variáveis de ambiente (.env)
+│   ├── server_control.py    # utilitário para iniciar/parar add.py via PowerShell
+│   ├── utils.py             # normalização e fuzzy-match
+│   ├── dados/usuario.json   # base local de contatos administrativos
+│   └── requirements.txt
 ├── frontend/
-│   ├── index.html        # Interface do usuário
-│   ├── script.js         # Lógica de frontend: conexão, busca, resultados
-│   └── style.css         # Estilos e responsividade
-│
-├── .gitignore
-├── git
-└── README.md            # Este arquivo           
+│   ├── index.html           # SPA com abas (consulta, pesquisa avançada, ADM)
+│   ├── script.js            # lógica principal (token, consultas, grid/mapa)
+│   ├── pesquisaue.js        # aba de pesquisa avançada, autocomplete
+│   ├── adm_masks.js         # máscaras e validação de formulários ADM
+│   ├── styles.css / pesquisaue.css
+│   └── assets (favicon, imagens)
+├── README.md                # este arquivo
+└── INSTALACAO_USO.txt       # passo a passo detalhado (Windows)
+```
 
-2. Configuração
+## Requisitos
 
-2.1 Backend
+- Python 3.9+
+- Pip + virtualenv (opcional)
+- Navegador moderno
 
-1. Instale Python >=3.9
-2. Crie um ambiente virtual (opcional, mas recomendado):
+## Configuração do Backend
 
-python -m venv venv
-source venv/bin/activate   # Linux/Mac
-venv\Scripts\activate      # Windows
-
+1. Entre na pasta `backend/`.
+2. Crie um ambiente virtual (opcional):
+   ```bash
+   python -m venv venv
+   venv\Scripts\activate    # Windows
+   source venv/bin/activate # Linux/macOS
+   ```
 3. Instale dependências:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Copie `.env.example` para `.env` e ajuste variáveis:
+   ```
+   HOST=127.0.0.1
+   PORT=5000
+   HTTP_TIMEOUT=20
+   APILIB_BASE_PROD=http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+   APILIB_BASE_SANDBOX=https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
+   TOKEN_URL=https://gateway.apilib.prefeitura.sp.gov.br/token
+   ADMIN_TOKEN=...  # opcional, protege rotas /api/server/*
+   ```
+   - As chaves `CONSUMER_KEY` e `CONSUMER_SECRET` são informadas pelo usuário via frontend.
 
-pip install flask requests python-dotenv rapidfuzz
+## Execução
 
-4. Crie um arquivo .env na pasta backend/ baseado em .env.example:
+### Backend
 
-HOST=127.0.0.1
-PORT=5000
-HTTP_TIMEOUT=20
-APILIB_BASE_PROD=http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
-APILIB_BASE_SANDBOX=https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1
-TOKEN_URL=https://gateway.apilib.prefeitura.sp.gov.br/token
-CONSUMER_KEY=1rQmU8QENUAmUHWxnvupVUeNwPwa
-CONSUMER_SECRET=Zd9fp7G41pDE8Jn6A4FsfnbKmTEa
-ACCESS_TOKEN_TESTE=64c494b2-fca5-3e27-b82e-7b6f88ed5855
-
-2.2 Frontend
-
-- Certifique-se de que os arquivos index.html, style.css e script.js estejam na pasta frontend/.
-- Não é necessário instalar nada extra para o frontend, apenas um navegador moderno.
-
-3. Executando o projeto
-
-3.1 Iniciar backend Flask
-
-Na pasta backend/:
-
+```bash
+cd backend
 python add.py
+```
 
-- A aplicação estará disponível em http://127.0.0.1:5000
-- Endpoint de saúde: GET /health
+Endpoints relevantes:
+- `GET /health` — status do servidor.
+- `POST /api/connect` — gera token OAuth2 (grant client_credentials).
+- `POST /api/search` — busca simples com heurística legacy.
+- `POST /api/schools` — busca oficial paginada com filtros.
+- `POST /api/server/shutdown` — encerra servidor (exige `ADMIN_TOKEN`).
 
-3.2 Abrir frontend
+### Frontend
 
-- Abra frontend/index.html no navegador.
-- Campos e botões:
+Abra `frontend/index.html` diretamente no navegador. A SPA inclui:
+- Offcanvas lateral com filtros e painel de conexão.
+- Aba principal para consulta rápida.
+- Aba “Buscar Unidade Escolar” com autocomplete, múltiplas seleções e grid exportável.
+- Aba “ADM” para cadastrar/remover contatos (sincroniza com `backend/dados/usuario.json`).
 
-1. Chave do Consumidor: preencha com CONSUMER_KEY
-2. Segredo do Consumidor: preencha com CONSUMER_SECRET
-3. Token de Acesso: preenchido automaticamente ao clicar em Conectar
-4. Nome da Escola: digite a escola que deseja buscar
-5. Botão Conectar: gera token via backend e API
-6. Botão Servidor: alterna estado do servidor (Liga/Desliga)
-7. Botão Buscar: realiza busca de escola
-8. Botões Apagar: limpam inputs ou resultados
-9. Resultado da Busca: boxes separados com ícone de cópia 📋
-10. Toast flutuante: exibe mensagens de sucesso ou erro
+## Fluxo Administrativo
 
-4. Funcionalidades
+Rotas em `/api/adm/*` gravam dados locais em `backend/dados/usuario.json`. O formato esperado é:
 
-- Conexão segura com a API EscolaAberta via token Bearer
-- Busca tolerante a erros de digitação (fuzzy match)
-- Resultados normalizados: nome, endereço, número, DRE
-- Responsivo para PC, tablet e mobile (Bootstrap + CSS custom)
-- Botões intuitivos e cores distintas:
-  - Conectar: vermelho → azul ao conectar
-  - Busca: verde
-  - Apagar: laranja
-  - Copiar resultado: azul
-- Toasts flutuantes para feedback visual
-- Backend Flask com endpoints:
-  - /api/connect → conecta na API e retorna token
-  - /api/search → busca escola pelo nome
-  - /api/server/shutdown → encerra servidor dev
-  - /health → retorna status do servidor
+```json
+[
+  {
+    "id": "3",
+    "nome": "Fulano da Silva",
+    "rf": "123456-7",
+    "telefone": "(11) 99999-9999"
+  }
+]
+```
 
-5. Testando
+- `POST /api/adm/append` adiciona registro (campos obrigatórios: `nome`, `rf`, `telefone`).
+- `GET /api/adm/list` lista itens ordenados por nome.
+- `POST /api/adm/delete` remove registro pelo `id`.
 
-1. Abra o frontend no navegador.
-2. Clique Conectar → token será preenchido.
-3. Digite o nome da escola.
-4. Clique Buscar → resultados aparecerão em boxes.
-5. Use 📋 para copiar os dados.
-6. Clique Servidor para ligar/desligar backend local (apenas dev).
+IDs são numéricos, atribuídos automaticamente e persistidos. O arquivo é criado se não existir.
 
-6. Observações
+## Testes
 
-- Token de acesso expira em 3600 segundos; recarregar via botão Conectar se necessário.
-- Sandbox e Produção podem ser alternados alterando base_url no frontend ou .env.
-- Todos os erros de conexão, busca ou servidor aparecem via toast flutuante.
-- Backend deve estar rodando antes de usar o frontend.
+Os testes unitários ficam em `backend/tests/` e utilizam `pytest`. Para executá-los:
 
-7. Licença
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest
+```
 
-Este projeto é demo/teste para integração com API EscolaAberta SP.
+Os testes cobrem:
+- Normalização e fuzzy-match em `utils.py`.
+- Comportamento do cliente HTTP (`api_client.py`) com chamadas mockadas.
 
+## Observações
 
+- Tokens expiram em ~3600 segundos; gere novamente via botão “Conectar”.
+- Altere o ambiente (Sandbox/Produção) ajustando `api_base` (frontend) ou `.env`.
+- Proteja suas credenciais; evite versionar `.env`.
+- Consulte `INSTALACAO_USO.txt` para passo a passo completo no Windows.
 
+---
 
-
-
-final
+Projeto demonstrativo para integração com a API EscolaAberta — Secretaria Municipal de Educação de São Paulo.

@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Consulta EscolaAberta SP</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- carrega primeiro o geral -->
 <link rel="stylesheet" href="styles.css">
+<!-- depois o específico da tela de pesquisa -->
+<link rel="stylesheet" href="pesquisaue.css">
+
 <!-- Favicon institucional SME -->
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -17,6 +22,29 @@
   .navbar-toggler:focus { box-shadow: none; }
   .offcanvas .clear-btn { margin-top: 4px; }
 </style>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          sme: {
+            primary: "#1d4ed8",
+            accent: "#0ea5e9",
+            neutral: "#f8fafc",
+            ink: "#0f172a"
+          }
+        },
+        boxShadow: {
+          'card': '0 12px 30px -12px rgba(15, 23, 42, 0.25)'
+        }
+      }
+    }
+  };
+</script>
+
+
 
 <div id="ultima-atualizacao" style="font-size:13px;color:#555;margin-bottom:8px;">
   Última atualização: —
@@ -41,8 +69,14 @@
     </button>
   </div>
 </nav>
-
-<div class="container">
+<!-- === Abas (não-invasivas) === -->
+<!-- === Abas principais (single-page) === -->
+<div id="simple-tabs" class="simple-tabs">
+  <button id="tab-btn-principal" class="simple-tab active" type="button">Página Principal</button>
+  <button id="tab-btn-pesquisaue" class="simple-tab" type="button">Requisição de veículo</button>
+  <button id="tab-btn-adm" class="simple-tab" type="button">ADM</button>
+</div>
+<div id="main-panel" class="container">
 
   <!-- Campo fixo de busca por Nome da Escola -->
   <div class="mb-2">
@@ -117,10 +151,10 @@
   <!-- Painel de resultados (inicialmente oculto) -->
   <div id="results-panel" class="results-panel mt-3" hidden>
     <div id="results"></div>
-<!-- Painel MODE (abaixo do results-panel) -->
-<div id="mode-panel" class="mt-3" hidden class="mt-3 border border-success rounded p-2">
-  <div id="mode-scroll" class="exscrollbox bg-lightgreen"></div>
-</div>
+      <!-- Painel MODE (abaixo do results-panel) -->
+      <div id="mode-panel" class="mt-3" hidden class="mt-3 border border-success rounded p-2">
+        <div id="mode-scroll" class="exscrollbox bg-lightgreen"></div>
+      </div>
   </div>
 
 </div>
@@ -399,44 +433,245 @@
 <script src="script.js"></script>
 <script src="grid.js"></script>
 <script src="maps/maps.js"></script>
+<script src="adm_masks.js"></script>
+
+
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          Grid.init(); // target padrão: #grid-panel
+        });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("service-worker.js")
+          .then(() => console.log("✅ Service Worker registrado!"))
+          .catch(err => console.log("❌ Erro ao registrar:", err));
+      }
+      </script>
+
+
+<!-- === Painel: Pesquisa UE (single-page) === -->
+<section id="pesquisaue-panel" style="display:none; padding:16px;">
+  <div class="container mt-2">
+    <div class="pesquisa-grid">
+
+              <!-- Card 1: Usuários -->
+                <div class="pesquisa-col-left" id="pu-left-column">
+
+                      <!-- Barra de ações (acima do Nome da Unidade Escolar) -->
+                      <div id="pu-savepdf-bar" class="mb-2" style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                        <button id="btn-save-pdf" type="button" class="btn btn-outline-secondary" style="padding:8px 12px; border-radius:6px;">
+                          Salvar em PDF
+                        </button>
+                      </div>
+
+                      <div class="pesquisa-float">
+                          <div class="pu-autocomplete-wrapper">
+                                <input type="text" id="pu-school-input" class="form-control" autocomplete="off" placeholder="Nome da Unidade Escolar">
+                                <div id="pu-school-dd" class="pu-dropdown" hidden></div>
+                          </div>
+                                <div id="pu-hint" class="form-text"> Use ↑/↓ e Selecione todas as UE para inserir outra.</div>
+                                <div id="pu-selected" class="pu-selected mt-3" hidden></div>
+                      </div>
+
+                 <!-- Card 2: Usuários -->
+                    <div class="pesquisa-float">
+                      <div class="row g-3 align-items-end">
+                        <div class="col-12">
+                          <select id="pu-usuario-select" class="form-select">
+                            <option value="">Selecione</option>
+                          </select>
+                          <div id="pu-user-hint" class="form-text mt-2">
+                            Selecione todos usuário para inserir outro.
+                          </div>
+                        </div>
+                      </div>
+                      <div id="pu-user-selected" class="pu-user-box mt-3" hidden></div>
+                    </div>
+
+                </div>
+
+
+        <div class="pesquisa-col-right" id="pu-right-column">
+                  <!-- Card 3: Data/Horários -->
+                  <div class="card shadow-sm">
+                    <div class="pesquisa-float">
+                      <div class="row g-3 align-items-end">
+
+                        
+                        <div class="col-lg-4 col-12">
+                          <label for="data-saida" class="form-label">Data de saída</label>
+                          <input type="date" id="data-saida" class="form-control">
+                        </div>
+                        <div class="col-lg-4 col-6">
+                          <label for="hora-saida" class="form-label">Horário de saída</label>
+                          <input type="time" id="hora-saida" class="form-control">
+                        </div>
+                        <div class="col-lg-4 col-6">
+                          <label for="hora-retorno" class="form-label">Horário de retorno</label>
+                          <input type="time" id="hora-retorno" class="form-control">
+                        </div>
+
+
+                        <!-- Grupo: percurso (exclusivo) -->
+                        <div class="col-12 mt-2">
+                          <fieldset id="pu-trip-group" class="pu-trip">
+                            <legend class="pu-trip-label mb-1">Percurso</legend>
+
+                            <div class="form-check form-check-inline">
+                              <input class="form-check-input pu-trip-option" type="checkbox" checked id="trip-both" value="ida_volta">
+                              <label class="form-check-label" for="trip-both">IDA E VOLTA</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                              <input class="form-check-input pu-trip-option" type="checkbox" id="trip-out" value="so_ida">
+                              <label class="form-check-label" for="trip-out">SÓ IDA</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                              <input class="form-check-input pu-trip-option" type="checkbox" id="trip-back" value="so_volta">
+                              <label class="form-check-label" for="trip-back">SÓ VOLTA</label>
+                            </div>
+                          </fieldset>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                    <!-- Card 4: Usuários -->
+                  <div class="card shadow-sm">
+                    <div class="pesquisa-float">
+                      <div class="row g-3 align-items-end">
+                        <div class="col-12">
+                          <!-- Card: Justificativas e Observações (lado direito) -->
+                          <div id="pu-card-justificativas" class="card shadow-sm mb-3" style="border-radius: 10px;">
+                            <div class="card-body">
+                              <div class="mb-3">
+                                <label for="pu-justificativa" class="form-label">JUSTIFICATIVA DAS SAÍDAS</label>
+                                  <textarea id="pu-justificativa" class="form-control" rows="3" placeholder="Descreva a justificativa..."></textarea>
+
+                                      <script>
+                                      document.addEventListener("DOMContentLoaded", () => {
+                                        const ta = document.getElementById("pu-justificativa");
+                                        if (ta && !ta.value) ta.value = "Vistoria de reformas";
+                                      });
+                                      </script>
+                              </div>
+                              <div class="mb-2">
+                                <label for="pu-observacoes" class="form-label">OBSERVAÇÕES</label>
+                                <textarea id="pu-observacoes" class="form-control" rows="3" placeholder="Inclua observações adicionais..."></textarea>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="pu-user-selected" class="pu-user-box mt-3" hidden></div>
+                    </div>
+                  </div>
+       </div>
+
+
+    </div>
+  </div>
+</section>
+
+
+<!-- === Painel: ADM (single-page) === -->
+<section id="adm-panel" style="display:none; padding:16px;">
+  <div class="container mt-2">
+    <div class="adm-layout">
+      <div class="adm-left">
+        <div class="adm-card">
+          <h6 class="adm-card-title">Cadastrar usuário</h6>
+          <div class="row g-3 align-items-end">
+            <div class="col-12">
+              <label for="adm-usuario" class="form-label">Nome do usuário</label>
+              <input type="text" id="adm-usuario" class="form-control" placeholder="Nome do usuário">
+            </div>
+            <div class="col-md-4 col-6">
+              <label for="adm-rf" class="form-label">RF</label>
+              <input type="text" id="adm-rf" class="form-control" placeholder="999999-9">
+            </div>
+            <div class="col-md-4 col-6">
+              <label for="adm-telefone" class="form-label">Telefone</label>
+              <input type="tel" id="adm-telefone" class="form-control" placeholder="(99) 99999-9999" autocomplete="tel">
+            </div>
+          </div>
+          <div class="mt-3 text-end">
+            <button id="adm-inserir" type="button" class="btn btn-primary">Inserir</button>
+          </div>
+        </div>
+        <div class="adm-card">
+          <h6 class="adm-card-title">Usuários cadastrados</h6>
+          <div id="adm-list" class="adm-user-list" role="list"></div>
+        </div>
+      </div>
+      <div class="adm-right"></div>
+    </div>
+  </div>
+</section>
+
+<script src="pesquisaue.js"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    Grid.init(); // target padrão: #grid-panel
-  });
-</script>
-
-<script>
-(function() {
-  function byId(id){ return document.getElementById(id); }
-  function bothLabelsHaveValue() {
-    const cod = byId("codigo-ue-label")?.textContent?.trim() || "—";
-    const mod = byId("mod-label")?.textContent?.trim() || "—";
-    return (cod !== "—" && cod.length > 0) && (mod !== "—" && mod.length > 0);
+// ADM tab controller (mínimo, não altera outras abas)
+(function(){
+  function q(id){ return document.getElementById(id); }
+  const btnPri = q('tab-btn-principal');
+  const btnPes = q('tab-btn-pesquisaue');
+  const btnAdm = q('tab-btn-adm');
+  const panMain = q('main-panel');
+  const panPesq = q('pesquisaue-panel');
+  const panAdm  = q('adm-panel');
+  if(!btnAdm || !panAdm) return;
+  function activate(btn){
+    [btnPri, btnPes, btnAdm].forEach(b=>b && b.classList.remove('active'));
+    btn && btn.classList.add('active');
   }
-  function updateModePanel() {
-    const panel = byId("mode-panel");
-    if (!panel) return;
-    panel.hidden = !bothLabelsHaveValue();
+  function hideAll(){
+    if(panMain) panMain.style.display='none';
+    if(panPesq) panPesq.style.display='none';
+    if(panAdm)  panAdm.style.display='none';
   }
-  document.addEventListener("DOMContentLoaded", updateModePanel);
-  if (window.MutationObserver) {
-    const codEl = byId("codigo-ue-label");
-    const modEl = byId("mod-label");
-    const obs = new MutationObserver(updateModePanel);
-    if (codEl) obs.observe(codEl, { childList: true, characterData: true, subtree: true });
-    if (modEl) obs.observe(modEl, { childList: true, characterData: true, subtree: true });
+  function show(which){
+    hideAll();
+    if(which==='adm'){ panAdm.style.display='block'; activate(btnAdm); }
+    else if(which==='pesq'){ panPesq.style.display='block'; activate(btnPes); }
+    else { panMain.style.display=''; activate(btnPri); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+  btnPri && btnPri.addEventListener('click', function(){ show('pri'); });
+  btnPes && btnPes.addEventListener('click', function(){ show('pesq'); });
+  btnAdm && btnAdm.addEventListener('click', function(){ show('adm'); });
+  if (location.hash === '#adm') show('adm');
 })();
-
 </script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("✅ Service Worker registrado!"))
-    .catch(err => console.log("❌ Erro ao registrar:", err));
-}
-</script>
-
 </body>
 </html>
+
+
+<script>
+(function () {
+  const group = document.getElementById('pu-trip-group');
+
+  // Delegação: funciona mesmo que o conteúdo seja recriado dinamicamente
+  group.addEventListener('change', (ev) => {
+    const el = ev.target;
+    if (!el.classList.contains('pu-trip-option')) return;
+
+    if (el.checked) {
+      // Se marcou um, desmarca todos os outros
+      group.querySelectorAll('.pu-trip-option').forEach((o) => {
+        if (o !== el) o.checked = false;
+      });
+    }
+    // Se desmarcou o único marcado, resultado pode ficar “nenhum selecionado” — OK.
+  });
+
+  // [Opcional] helper pra obter o valor atual
+  window.getSelectedTrip = function(){
+    const cur = group.querySelector('.pu-trip-option:checked');
+    return cur ? cur.value : null; // "ida_volta" | "so_ida" | "so_volta" | null
+  };
+})();
+</script>

@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
    script.js — refatorado (modesc dinâmico) c/ Maps
    Nome no Google Maps = (tipoesc ajustado) + " " + nomesc
    Regra: se tipoesc === "CR.P.CONV" usar "CEI CONV" (apenas para Maps)
@@ -279,6 +279,10 @@ const Grid = (()=> {
   return { ensure, render, syncSize, purgeTablesInsidePanels };
 })();
 
+/* desativado: gráfico rápido */
+const ModeChart = { render(){}, clear(){} };
+
+
 /* --------- Fetch bus ---------- */
 const FetchBus = (()=> {
   const listeners = [];
@@ -302,6 +306,7 @@ const FetchBus = (()=> {
 FetchBus.on(({url, meth, data})=>{
   if (url.includes("/api/schools") && meth==="POST") {
     const items = Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []);
+    ModeChart.clear();
     if (items.length) Grid.render(items, { title:"Planilha de escolas", filename:"escolas" });
   }
   if (/\/sme\/EscolaAberta\/v1\/api\//i.test(url) && meth==="GET") {
@@ -309,6 +314,9 @@ FetchBus.on(({url, meth, data})=>{
     if (items.length) {
       const modeNow = (getState().tipobusca || "").toLowerCase();
       Grid.render(items, { title: getUETitle(), filename: modeNow || "consulta" });
+      ModeChart.render(items, modeNow);
+    } else {
+      ModeChart.clear();
     }
   }
 });
@@ -317,12 +325,10 @@ FetchBus.on(({url, meth, data})=>{
 async function fetchModeIfNeeded(){
   const { tipobusca, codesc, token } = getState();
   const mode = (tipobusca||"").trim();
-  if (!mode || mode==="—") return;
-  if (!codesc || codesc==="—" || !token) return;
-  const modePanel = $id("mode-panel");
-  if (modePanel) modePanel.hidden = false;
-  const box = $id("mode-scroll");
-  if (box) box.innerHTML = "<div class='p-2 small text-muted'>Carregando…</div>";
+  if (!mode || mode==="—") { ModeChart.clear(); return; }
+  if (!codesc || codesc==="—" || !token) { ModeChart.clear(); return; }
+  ModeChart.clear();
+
   const base = "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1/api";
   const url1 = `${base}/${encodeURIComponent(mode)}/${encodeURIComponent(codesc)}/`;
   const url2 = `${base}/${encodeURIComponent(mode)}/${encodeURIComponent(codesc)}`;
@@ -403,6 +409,7 @@ async function fetchModeIfNeeded(){
 
 /* --------- Montagem e eventos ---------- */
 document.addEventListener("DOMContentLoaded", () => {
+  
   const btnConnect       = $id("btn-connect");
   const btnSearchSchools = $id("btn-search-schools");
   const btnClearAll      = $id("btn-clear-all");
@@ -423,11 +430,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const cs = $id("consumer_secret")?.value.trim();
     if (!ck || !cs) { toast("Preencha consumer key e segredo","error"); return; }
     try {
+
       const r = await fetch("/api/connect",{
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({ consumer_key:ck, consumer_secret:cs, base_url: "https://gateway.apilib.prefeitura.sp.gov.br/token" })
       });
+
       const data = await r.json();
       if (data.access_token){
         const acc = $id("access_token");
@@ -449,7 +458,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const token=($id("access_token")?.value||"").trim();
     if (!token){ toast("Preencha o token de acesso","error"); return; }
     $$(".consulta-check").forEach(c=>c.checked=false);
-    setModLabel("—");
+    setModLabel("-");
+    ModeChart.clear();
     const payload={ token };
     ["page","search","dre","tipoesc","distrito","bairro","subpref"].forEach(id=>{
       const v=$id(id)?.value.trim(); if (v) payload[id]=v;
@@ -577,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.MapsApp) {
           MapsApp.bindButton(mapsBtn, () => {
             let tipo = pre.dataset.tipoesc || item.tipoesc || "";
-            if (tipo === "CR.P.CONV") tipo = "CEI"; // <<< regra só para Maps
+            if (tipo === "CR.P.CONV") tipo = "CEI CONV"; // <<< regra só para Maps
             const nome = pre.dataset.nomesc || item.nomesc || "";
             return {
               lat:  pre.dataset.latitude  ?? item.latitude,
@@ -617,6 +627,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const gp = $id("grid-panel"); if (gp) gp.hidden = true;
     const mp = $id("mode-panel"); if (mp) mp.hidden = true;
     const ms = $id("mode-scroll"); if (ms) ms.innerHTML = "";
+    ModeChart.clear();
   });
 
 
@@ -728,6 +739,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (gp) gp.hidden = true;
       if (mp) mp.hidden = true;
       if (ms) ms.innerHTML = "";
+      ModeChart.clear();
     }
   }
 
@@ -828,4 +840,299 @@ document.addEventListener("DOMContentLoaded", () => {
     const obs = new MutationObserver(() => resizeGridToViewport());
     obs.observe(moTarget, { childList: true, subtree: true });
   }
+})();
+
+
+// ==== ADM: usuarios (render em textbox + exclusão) ====
+(function () {
+  function renderAdmUsers(items) {
+    const list = document.getElementById('adm-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'adm-user-status';
+      empty.textContent = 'Nenhum usuario cadastrado.';
+      list.appendChild(empty);
+      return;
+    }
+
+    items.forEach((item) => {
+      const row = document.createElement('div');
+      row.className = 'adm-user-row';
+      row.dataset.id = (item.id || '').toString();
+      row.dataset.nome = item.nome || '';
+
+      const textbox = document.createElement('input');
+      textbox.type = 'text';
+      textbox.className = 'form-control adm-user-input';
+      textbox.readOnly = true;
+      const nome = item.nome || '';
+      const rf = item.rf || '';
+      const telefone = item.telefone || '';
+      const texto = (nome + ' | RF: ' + rf + ' | Tel: ' + telefone).trim();
+      textbox.value = texto;
+      textbox.setAttribute('aria-label', 'Usuario ' + nome);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'adm-user-delete btn btn-sm btn-outline-danger';
+      removeBtn.title = 'Excluir usuario';
+      removeBtn.textContent = 'X';
+
+      row.appendChild(textbox);
+      row.appendChild(removeBtn);
+      list.appendChild(row);
+    });
+  }
+
+  async function carregarListaADM() {
+    const list = document.getElementById('adm-list');
+    if (list) {
+      list.innerHTML = '<div class="adm-user-status">Carregando usuarios...</div>';
+    }
+    try {
+      const resp = await fetch('/api/adm/list', { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      const items = Array.isArray(data.items) ? data.items : [];
+      renderAdmUsers(items);
+    } catch (error) {
+      console.error('[ADM] carregar', error);
+      if (list) {
+        list.innerHTML = '<div class="adm-user-status adm-user-status--error">Erro ao carregar usuarios.</div>';
+      }
+      toast('Erro ao carregar usuarios ADM.', 'error');
+    }
+  }
+
+  async function inserirADM() {
+    const nome = (document.getElementById('adm-usuario')?.value || '').trim();
+    const rf = (document.getElementById('adm-rf')?.value || '').trim();
+    const telefone = (document.getElementById('adm-telefone')?.value || '').trim();
+
+    if (!nome || !rf || !telefone) {
+      toast('Informe Nome, RF e Telefone antes de inserir.', 'warn');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/adm/append', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, rf, telefone })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data?.ok === false) {
+        throw new Error(data?.error || 'Falha ao salvar o usuario.');
+      }
+      toast('Usuario cadastrado.', 'success');
+      await carregarListaADM();
+    } catch (error) {
+      console.error('[ADM] inserir', error);
+      toast(error.message || 'Erro ao salvar usuario.', 'error');
+    }
+  }
+
+  async function excluirADM(id, nome) {
+    if (!id) return;
+    const confirmMsg = nome ? 'Excluir definitivamente "' + nome + '"?' : 'Excluir este usuario?';
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const resp = await fetch('/api/adm/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      const data = await resp.json();
+      if (!resp.ok || data?.ok === false) {
+        throw new Error(data?.error || 'Falha ao excluir o usuario.');
+      }
+      toast('Usuario excluído.', 'success');
+      await carregarListaADM();
+    } catch (error) {
+      console.error('[ADM] excluir', error);
+      toast(error.message || 'Erro ao excluir usuario.', 'error');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('adm-inserir')?.addEventListener('click', inserirADM);
+
+    document.getElementById('adm-list')?.addEventListener('click', (event) => {
+      const button = event.target.closest('.adm-user-delete');
+      if (!button) return;
+      const row = button.closest('.adm-user-row');
+      if (!row) return;
+      excluirADM(row.dataset.id, row.dataset.nome);
+    });
+
+    document.getElementById('tab-btn-adm')?.addEventListener('click', carregarListaADM);
+
+    carregarListaADM();
+  });
+})();
+
+// === Buscar Unidade Escolar: usuário -> <textarea JSON> =====================
+(() => {
+  document.addEventListener("DOMContentLoaded", () => {
+    const selectEl = document.getElementById("pu-usuario-select");
+    if (!selectEl) return;
+
+    const scope = selectEl.closest(".pesquisa-float") || selectEl.parentElement || document;
+
+      let box = scope.querySelector("#pu-user-tags");
+      if (!box) {
+        box = document.createElement("div");
+        box.id = "pu-user-tags";
+        const hint = scope.querySelector("#pu-user-hint");
+        (hint || selectEl).insertAdjacentElement("afterend", box);
+      }
+
+    function applyTagMeta(tag, meta) {
+      if (!tag) return;
+      const info = meta || {};
+      tag.dataset.userNome = info.nome || "";
+      tag.dataset.userRf = info.rf || "";
+      tag.dataset.userTelefone = info.telefone || "";
+      if (info.id) {
+        tag.dataset.userId = info.id;
+      } else if (tag.dataset.userId) {
+        delete tag.dataset.userId;
+      }
+    }
+
+    function createTag(value, meta) {
+      const tag = document.createElement("div");
+      tag.className = "pu-user-tag";
+      tag.style.display = "flex";
+      tag.style.alignItems = "center";
+      tag.style.gap = "8px";
+      tag.style.padding = "6px 10px";
+      tag.style.border = "1px solid #e5e7eb";
+      tag.style.borderRadius = "6px";
+      tag.style.background = "#fff";
+      tag.style.cursor = "pointer";
+
+      tag.innerHTML = `
+        <span class="pu-user-label"></span>
+        <button type="button" class="pu-user-close" aria-label="Remover">×</button>
+      `;
+      const label = tag.querySelector(".pu-user-label");
+      const close = tag.querySelector(".pu-user-close");
+      label.textContent = String(value ?? "");
+      applyTagMeta(tag, meta);
+
+      // toggle seleção (laranja)
+      tag.addEventListener("mousedown", (ev) => {
+        if (ev.target === close) return;
+        tag.classList.toggle("active");
+        // cor laranja sem precisar mexer em CSS global
+        tag.style.backgroundColor = tag.classList.contains("active") ? "#fde68a" : "#fff";
+      });
+
+      // remover
+      close.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        tag.remove();
+      });
+
+      return tag;
+    }
+
+
+    function getTags() { return Array.from(box.querySelectorAll(".pu-user-tag")); }
+
+    function valueExists(val) {
+      return getTags().some(t => (t.querySelector(".pu-user-label")?.textContent || "") === val);
+    }
+
+    function parseFromLabel(text) {
+      const t = (text || "").trim();
+      const nome = (t.split(" — ")[0] || t).trim().toUpperCase();
+      const rfMatch = t.match(/\b(\d{4,7}-\d)\b/);
+      const telMatch = t.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/);
+      return { nome, rf: rfMatch ? rfMatch[1] : "", telefone: telMatch ? telMatch[0] : "" };
+    }
+
+    function composeUserInfo(opt) {
+      const id  = (opt.dataset.id || opt.value || "").trim();
+      const rf  = (opt.dataset.rf || "").trim();
+      const tel = (opt.dataset.tel || "").trim();
+      let nome  = (opt.textContent || "").trim();
+      nome = (nome.split(" — ")[0] || nome).trim().toUpperCase();
+
+      let _rf = rf, _tel = tel;
+      // fallback: tenta extrair do texto da opção, se não vier por data-*
+      if (!_rf || !_tel) {
+        const t = (opt.textContent || "").trim();
+        const rfMatch  = t.match(/\b(\d{4,7}-\d)\b/);
+        const telMatch = t.match(/\(?\d{2}\)?\s?\d{4,5}-?\d{4}/);
+        if (!_rf && rfMatch)  _rf  = rfMatch[1];
+        if (!_tel && telMatch) _tel = telMatch[0];
+      }
+
+      // monta linha final, evitando “|” duplo se faltar algum campo
+      const parts = [];
+      if (nome) parts.push(nome);
+      if (_rf)  parts.push(`RF: ${_rf}`);
+      if (_tel) parts.push(`Tel: ${_tel}`);
+
+      return {
+        label: parts.join(" | "),
+        meta: {
+          id,
+          nome,
+          rf: _rf,
+          telefone: _tel
+        }
+      };
+    }
+
+      function replaceFirstNonActive(val, meta) {
+        const tags = getTags();
+        const target = tags.find(t => !t.classList.contains("active")) || tags[0];
+        const label = target.querySelector(".pu-user-label");
+        if (label) label.textContent = String(val ?? "");
+        target.classList.remove("active");
+        target.style.backgroundColor = "#fff";
+        applyTagMeta(target, meta);
+      }
+
+      function appendOrReplace(val, meta) {
+        const tags = getTags();
+
+        // 1ª inserção: cria a primeira label (não-laranja)
+        if (!tags.length) {
+          box.appendChild(createTag(val, meta));
+          return;
+        }
+
+        // verifica se TODAS estão ativas (laranja)
+        const allActive = tags.every(t => t.classList.contains("active"));
+
+        if (allActive) {
+          // todas selecionadas -> tenta acrescentar (até 4); senão, substitui primeira não ativa
+          if (tags.length < 4) {
+            if (!valueExists(val)) box.appendChild(createTag(val, meta));
+          } else {
+            replaceFirstNonActive(val, meta);
+          }
+        } else {
+          // existe pelo menos uma não selecionada -> substitui a primeira não selecionada
+          replaceFirstNonActive(val, meta);
+        }
+      }
+
+    selectEl.addEventListener("change", () => {
+      const opt = selectEl.options[selectEl.selectedIndex];
+      if (!opt || !opt.value) return;
+      const info = composeUserInfo(opt);
+      const line = info?.label || "";
+      if (!line) return;
+      if (valueExists(line)) return;
+      appendOrReplace(line, info?.meta || {});
+    });
+  });
 })();

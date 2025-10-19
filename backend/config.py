@@ -1,40 +1,38 @@
-# inicio - config.py  Rico
 # -*- coding: utf-8 -*-
 """
-Arquivo: config.py
-Função: Carrega variáveis de ambiente para o backend.
-Configura host, porta, timeout e URLs da API.
+Configurações de ambiente para o backend Flask.
+Carrega variáveis do arquivo .env e expõe constantes de uso interno.
 """
 
-
-
 import os
+
 from dotenv import load_dotenv
 
-# Carrega .env
+# Carrega valores do .env (se existir)
 load_dotenv()
 
-# Porta do Flask
+# Host e porta do servidor Flask
 PORT = int(os.getenv("PORT", "5000"))
-# Host de bind (localhost por padrão)
 HOST = os.getenv("HOST", "127.0.0.1")
 
-# Timeout padrão para requests externos (segundos)
+# Timeout padrão para chamadas HTTP externas (segundos)
 HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "20"))
 
-# Base URLs (Produção/Sandbox)
+# URLs base da API EscolaAberta
 APILIB_BASE_PROD = os.getenv(
     "APILIB_BASE_PROD",
-    "http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1"
+    "http://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1",
 )
 APILIB_BASE_SANDBOX = os.getenv(
     "APILIB_BASE_SANDBOX",
-    "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1"
+    "https://gateway.apilib.prefeitura.sp.gov.br/sme/EscolaAberta/v1",
 )
 
-# Token endpoint (usado para solicitar tokens)
+# Endpoint de token OAuth2
 TOKEN_URL = os.getenv(
     "TOKEN_URL",
-    "https://gateway.apilib.prefeitura.sp.gov.br/token"
+    "https://gateway.apilib.prefeitura.sp.gov.br/token",
 )
-# final
+
+# Token opcional para rotas administrativas (/api/server/*)
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "").strip()

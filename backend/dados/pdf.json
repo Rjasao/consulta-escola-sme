@@ -1,0 +1,49 @@
+{
+  "gerado_em": "2025-10-19T22:40:31.638Z",
+  "unidades": [
+    {
+      "nome": "MARIA EUGENIA FAKHOURY",
+      "endereco": "RUA CONSTELACAO DO ERIDANO, 200 - JARDIM CAMPINAS / CS",
+      "tipo": "EMEI",
+      "dre": "CS",
+      "codesc": "000531"
+    },
+    {
+      "nome": "RODOLFO TREVISAN1",
+      "endereco": "RUA SILVA AIROSA, 60 - VILA RIBEIRO DE BARROS / PJ",
+      "tipo": "EMEI",
+      "dre": "PJ",
+      "codesc": "000469"
+    },
+    {
+      "nome": "ASSAD ABDALA",
+      "endereco": "AVENIDA MENDONCA DRUMOND, 902 - JARDIM MARINGÁ / PE",
+      "tipo": "EMEF",
+      "dre": "PE",
+      "codesc": "000485"
+    },
+    {
+      "nome": "EDA TEREZINHA CHICA MEDEIROS, PROFA.",
+      "endereco": "RUA ENGENHEIRO HUGO TAKAHASHI, 333 - RAPOSO TAVARES / BT",
+      "tipo": "EMEF",
+      "dre": "BT",
+      "codesc": "000477"
+    }
+  ],
+  "usuarios": [
+    {
+      "nome": "RICARDO BELA",
+      "rf": "748975-7",
+      "telefone": "(11) 96911-4465"
+    }
+  ],
+  "data_saida": "2025-10-20",
+  "hora_saida": "09:30",
+  "hora_retorno": "17:00",
+  "percurso": "ida_volta",
+  "percurso_lista": [
+    "ida_volta"
+  ],
+  "justificativa": "Vistoria de reformas",
+  "observacoes": "rrrrrrrrrrrrrrr"
+}
