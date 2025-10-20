@@ -611,6 +611,136 @@ async function fetchSuggest(q){
     };
   }
 
+  let pdfPopupTimer = null;
+  let pdfPopupPreviousFocus = null;
+  let pdfPopupAudioCtx = null;
+
+  function ensurePdfSavePopup(){
+    let overlay = document.getElementById("pdf-save-popup-overlay");
+    if (overlay) return overlay;
+    overlay = document.createElement("div");
+    overlay.id = "pdf-save-popup-overlay";
+    overlay.className = "pdf-save-popup";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = [
+      '<div class="pdf-save-popup-dialog" role="alertdialog" aria-modal="true" aria-labelledby="pdf-save-popup-title" aria-describedby="pdf-save-popup-message">',
+      '  <div class="pdf-save-popup-icon" aria-hidden="true"></div>',
+      '  <div class="pdf-save-popup-body">',
+      '    <h2 id="pdf-save-popup-title" class="pdf-save-popup-title"></h2>',
+      '    <p id="pdf-save-popup-message" class="pdf-save-popup-message"></p>',
+      '  </div>',
+      '  <button type="button" class="pdf-save-popup-close">OK</button>',
+      '</div>'
+    ].join("");
+    document.body.appendChild(overlay);
+    const closeBtn = overlay.querySelector(".pdf-save-popup-close");
+    if (closeBtn) closeBtn.addEventListener("click", hidePdfSavePopup);
+    overlay.addEventListener("click", (evt) => {
+      if (evt.target === overlay) hidePdfSavePopup();
+    });
+    return overlay;
+  }
+
+  function hidePdfSavePopup(){
+    const overlay = document.getElementById("pdf-save-popup-overlay");
+    if (!overlay) return;
+    overlay.classList.remove("visible");
+    overlay.setAttribute("aria-hidden", "true");
+    if (overlay._keyListener){
+      document.removeEventListener("keydown", overlay._keyListener);
+      overlay._keyListener = null;
+    }
+    if (pdfPopupTimer){
+      clearTimeout(pdfPopupTimer);
+      pdfPopupTimer = null;
+    }
+    const prev = pdfPopupPreviousFocus;
+    pdfPopupPreviousFocus = null;
+    if (prev && typeof prev.focus === "function"){
+      setTimeout(() => {
+        try { prev.focus({ preventScroll: true }); }
+        catch(_){ prev.focus(); }
+      }, 0);
+    }
+  }
+
+  function showPdfSavePopup(opts){
+    const overlay = ensurePdfSavePopup();
+    const success = !!opts?.success;
+    const message = (opts?.message || "").toString().trim() || (success ? "PDF salvo com sucesso." : "Erro ao salvar PDF.");
+    const titleEl = overlay.querySelector(".pdf-save-popup-title");
+    const messageEl = overlay.querySelector(".pdf-save-popup-message");
+    const iconEl = overlay.querySelector(".pdf-save-popup-icon");
+    const closeBtn = overlay.querySelector(".pdf-save-popup-close");
+    overlay.dataset.type = success ? "success" : "error";
+    if (titleEl) titleEl.textContent = success ? "PDF salvo" : "Falha ao salvar PDF";
+    if (messageEl) messageEl.textContent = message;
+    if (iconEl) iconEl.textContent = success ? "\u2713" : "\u26A0";
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.classList.add("visible");
+    const activeEl = document.activeElement;
+    pdfPopupPreviousFocus = activeEl && typeof activeEl.focus === "function" ? activeEl : null;
+    if (overlay._keyListener){
+      document.removeEventListener("keydown", overlay._keyListener);
+    }
+    overlay._keyListener = (event) => {
+      if (event.key === "Escape"){
+        event.preventDefault();
+        hidePdfSavePopup();
+      }
+    };
+    document.addEventListener("keydown", overlay._keyListener);
+    if (closeBtn){
+      try { closeBtn.focus({ preventScroll: true }); }
+      catch(_){ closeBtn.focus(); }
+    }
+    if (pdfPopupTimer){
+      clearTimeout(pdfPopupTimer);
+      pdfPopupTimer = null;
+    }
+    if (success){
+      pdfPopupTimer = setTimeout(() => hidePdfSavePopup(), 6000);
+    }
+  }
+
+  function playPdfFeedbackSound(kind){
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) return;
+    try{
+      if (!pdfPopupAudioCtx){
+        pdfPopupAudioCtx = new AudioContextCtor();
+      }
+      const ctx = pdfPopupAudioCtx;
+      if (ctx.state === "suspended"){
+        ctx.resume().catch(() => {});
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+      osc.type = "sine";
+      if (kind === "success"){
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.25);
+      } else {
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.3);
+      }
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.45);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
+    }catch(err){
+      console.debug("[Salvar PDF] audio indisponivel", err);
+    }
+  }
+
   async function handleSavePdfClick(event){
     event?.preventDefault();
     const btn = event?.currentTarget;
@@ -643,13 +773,17 @@ async function fetchSuggest(q){
         const errMsg = data?.error || `Falha ao salvar (HTTP ${resp.status})`;
         throw new Error(errMsg);
       }
+      const successMessage = data?.message || (data?.pdf ? `PDF gerado: ${data.pdf}` : "Informacoes salvas em pdf.json.");
+      showPdfSavePopup({ success: true, message: successMessage });
+      playPdfFeedbackSound("success");
       if (typeof toast === "function") {
-        const message = data?.message || (data?.pdf ? `PDF gerado: ${data.pdf}` : "Informacoes salvas em pdf.json.");
-        toast(message, "success", { anchor: "panel", duration: 6000 });
+        toast(successMessage, "success", { anchor: "panel", duration: 6000 });
       }
       console.info("[Salvar PDF] payload armazenado em pdf.json");
     }catch(err){
       const msg = err?.message || "Erro ao salvar pdf.json.";
+      showPdfSavePopup({ success: false, message: msg });
+      playPdfFeedbackSound("error");
       if (typeof toast === "function") toast(msg, "error", { anchor: "panel" });
       else console.error(msg);
     }finally{

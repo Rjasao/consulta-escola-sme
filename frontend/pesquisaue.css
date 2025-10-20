@@ -324,3 +324,99 @@
 
 #pesquisaue-panel .pu-card-close::after{ content:none !important; }
 
+/* Popup de feedback do PDF */
+.pdf-save-popup{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(15,23,42,0.55);
+  z-index:12000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+
+.pdf-save-popup.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.pdf-save-popup .pdf-save-popup-dialog{
+  background:#ffffff;
+  border-radius:14px;
+  padding:24px 28px;
+  width:min(90vw, 360px);
+  box-shadow:0 28px 48px -22px rgba(15,23,42,0.55);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  text-align:center;
+}
+
+.pdf-save-popup .pdf-save-popup-icon{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+  font-weight:700;
+}
+
+.pdf-save-popup[data-type="success"] .pdf-save-popup-icon{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.pdf-save-popup[data-type="error"] .pdf-save-popup-icon{
+  background:#fee2e2;
+  color:#b91c1c;
+}
+
+.pdf-save-popup .pdf-save-popup-title{
+  margin:0;
+  font-size:20px;
+  font-weight:700;
+  color:#0f172a;
+}
+
+.pdf-save-popup .pdf-save-popup-message{
+  margin:0;
+  font-size:15px;
+  line-height:1.4;
+  color:#334155;
+}
+
+.pdf-save-popup .pdf-save-popup-close{
+  margin-top:4px;
+  padding:9px 22px;
+  border:none;
+  border-radius:999px;
+  font-weight:600;
+  cursor:pointer;
+  background:#1e40af;
+  color:#ffffff;
+  transition:background .2s ease, transform .2s ease;
+}
+
+.pdf-save-popup[data-type="success"] .pdf-save-popup-close{
+  background:#0f766e;
+}
+
+.pdf-save-popup[data-type="error"] .pdf-save-popup-close{
+  background:#b91c1c;
+}
+
+.pdf-save-popup .pdf-save-popup-close:hover{
+  transform:translateY(-1px);
+}
+
+.pdf-save-popup .pdf-save-popup-close:focus{
+  outline:3px solid rgba(37,99,235,0.45);
+  outline-offset:2px;
+}
+
