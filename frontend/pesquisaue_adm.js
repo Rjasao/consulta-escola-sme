@@ -280,7 +280,7 @@ function mapRow(row){
 
     if (bairro)  endereco += (endereco ? " - " : "") + bairro;
 
-    if (dre) {\r\n    const drePart = `/ ${dre}`;\r\n    endereco = endereco ? `${endereco} / ${dre}` : drePart;\r\n  }
+    if (dre) {endereco = endereco ? `${endereco} / ${dre}` : drePart; }
 
 
 

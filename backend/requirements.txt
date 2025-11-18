@@ -4,3 +4,25 @@ requests==2.32.3
 rapidfuzz==3.9.7
 pywin32==311
 
+4f0df88b4553df0129de0303cd81e09660d1605b728735de8f7e8b5fe7d11a547e49c851e67d423ce26822d783501169269eb5218b5c38121bf233b708b5c526
+
+https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0.306/dotnet-sdk-9.0.306-win-arm64.exe
+
+
+20bb095139834925910d3ed10c23a1435fd16178084d6fdc96e8e3bc17772dfe5b95330290a979e31c841b470b0fdedba5a6f70841bff14c1588822a5cf0ff58
+
+https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.121/dotnet-sdk-8.0.121-win-arm64.exe
+
+Feche o terminal atual.
+Abra o PowerShell como Administrador (Win+X → “Windows PowerShell (Admin)”).
+cd C:\Users\rjasa\Desktop\app-consulta-escola
+Execute dotnet workload install maui-android.
+Após a instalação, rode dotnet restore.
+Se mesmo no shell elevado a workload não instalar, use o Visual Studio Installer para habilitar “Desenvolvimento .NET Multi-platform App UI (MAUI)” e depois repita o dotnet restore.
+
+& "C:\Android\cmdline-tools\latest\bin\sdkmanager.bat" `
+  "platform-tools" `
+  "emulator" `
+  "platforms;android-34" `
+  "build-tools;34.0.0" `
+  "system-images;android-34;google_apis;x86_64"
